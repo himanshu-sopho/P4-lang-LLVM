@@ -1,0 +1,594 @@
+/*
+ * test.cpp
+ *
+ *  Created on: 30-May-2018
+ *      Author: hishukl2
+ */
+
+#include <iostream>
+#include <string>
+#include <antlr4-runtime.h>
+#include "P416BaseVisitor.h"
+#include "P416Parser.h"
+#include "P416Visitor.h"
+#include "P416Lexer.h"
+#include "P416BaseListener.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include <map>
+#include <iterator>
+#include <stdlib.h>
+#include <string.h>
+
+using namespace llvm;
+using namespace std;
+using namespace antlr4;
+
+map <string,string> typedefMap;
+map <string, string> :: iterator itr;
+
+
+static LLVMContext context;
+llvm::Module* module = new llvm::Module("top", context);
+llvm::IRBuilder<> builder(context);
+
+
+
+llvm::FunctionType *funcType =
+  llvm::FunctionType::get(builder.getInt32Ty(), false);
+
+
+
+class MyDeclarationVisitor:public P416BaseVisitor
+{
+	public:
+
+		antlrcpp::Any visitErrorDeclaration(P416Parser::ErrorDeclarationContext *ctx) override
+		{
+			string rString = ctx->ERROR()->toString();
+			rString += ctx->LCURL()->toString();
+			rString += visit(ctx->identifierList()).as<string>();
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitIdentifierList(P416Parser::IdentifierListContext *ctx) override
+		{
+			string rString = visit(ctx->name(0));
+			int vector_size = ctx->COMMA().size();
+			for (int i=0;i< vector_size;i++)
+			{
+				rString += ctx->COMMA(i)->toString();
+				rString += visit(ctx->name(i+1)).as<string>();
+			}
+			return rString;
+		}
+
+		antlrcpp::Any visitName(P416Parser::NameContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->nonTypeName()!=NULL)
+				rString = visit(ctx->nonTypeName()).as<string>();
+			if(ctx->IDENTIFIER() !=NULL)
+				rString += ctx->IDENTIFIER()->toString();
+			if(ctx->ERROR() !=NULL)
+				rString += ctx->ERROR()->toString();
+			if(ctx->EXTRACT() !=NULL)
+				rString += ctx->EXTRACT()->toString();
+			if(ctx->APPLY() !=NULL)
+				rString += ctx->APPLY()->toString();
+
+			return rString;
+		}
+
+		antlrcpp::Any visitNonTypeName(P416Parser::NonTypeNameContext *ctx) override
+		{
+			string rString = "";
+			if(ctx->ACTIONS()!= NULL)
+				rString += ctx->ACTIONS()->toString();
+			if(ctx->IDENTIFIER()!= NULL)
+				rString += ctx->IDENTIFIER()->toString();
+			if(ctx->APPLY()!= NULL)
+				rString += ctx->APPLY()->toString();
+			if(ctx->KEY()!= NULL)
+				rString += ctx->KEY()->toString();
+			if(ctx->STATE()!= NULL)
+				rString += ctx->STATE()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitSimpleTypeDef(P416Parser::SimpleTypeDefContext *ctx) override
+		{
+			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->typeRef()->getText()));
+			return visitChildren(ctx);
+		}
+		antlrcpp::Any visitDerivedTypeDef(P416Parser::DerivedTypeDefContext *ctx) override
+		{
+			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->derivedTypeDeclaration()->getText()));
+			return visitChildren(ctx);
+		}
+
+		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
+		{
+		//	return visitChildren(ctx);
+			cout << "typeref\n" <<ctx->getText()<<endl;
+			string rString="";
+			if (ctx->baseType() != nullptr)
+				rString += visit(ctx->baseType()).as<string>();
+			if (ctx->typeName() != nullptr)
+				rString += visit(ctx->typeName()).as<string>();
+			if (ctx->specializedType() != nullptr)
+				rString += visit(ctx->specializedType()).as<string>();
+			if (ctx->headerStackType() != nullptr)
+				rString += visit(ctx->headerStackType()).as<string>();
+			if (ctx->tupleType() != nullptr)
+				rString += visit(ctx->tupleType()).as<string>();
+			cout << "gettting out of typeref" <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitBoolType(P416Parser::BoolTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->BOOL() !=NULL)
+				rString += ctx->BOOL()->toString();
+			return rString;
+		}
+		antlrcpp::Any visitErrorType(P416Parser::ErrorTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->ERROR() !=NULL)
+				rString += ctx->ERROR()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitBitType(P416Parser::BitTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->BIT() !=NULL)
+				rString += ctx->BIT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->BIT() !=NULL)
+				rString += ctx->BIT()->toString();
+			if(ctx->LT() !=NULL)
+				rString += ctx->LT()->toString();
+			if(ctx->number() !=nullptr)
+				rString += visit(ctx->number()).as<string>();
+			if(ctx->GT() !=NULL)
+				rString += ctx->GT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitIntSizeType(P416Parser::IntSizeTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->INT() !=NULL)
+				rString += ctx->INT()->toString();
+			if(ctx->LT() !=NULL)
+				rString += ctx->LT()->toString();
+			if(ctx->number() !=nullptr)
+				rString += visit(ctx->number()).as<string>();
+			if(ctx->GT() !=NULL)
+				rString += ctx->GT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitVarBitSizeType(P416Parser::VarBitSizeTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->VARBIT() !=NULL)
+				rString += ctx->VARBIT()->toString();
+			if(ctx->LT() !=NULL)
+				rString += ctx->LT()->toString();
+			if(ctx->number() !=nullptr)
+				rString += visit(ctx->number()).as<string>();
+			if(ctx->GT() !=NULL)
+				rString += ctx->GT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitTypeName(P416Parser::TypeNameContext *ctx) override
+		{
+			string rString="";
+//			antlrcpp::Any temp = visit(ctx->prefixedType());
+//			if(temp.isNotNull())
+//				rString += temp.as<string>();
+			if (ctx->prefixedType() != nullptr)
+				rString += visit(ctx->prefixedType()).as<string>();
+			return rString;
+		}
+
+		antlrcpp::Any visitPrefixedType(P416Parser::PrefixedTypeContext *ctx) override
+		{
+			string rString="";
+			if(ctx->IDENTIFIER() !=NULL)
+				rString += ctx->IDENTIFIER()->toString();
+			if(ctx->dotPrefix() != nullptr)
+			{
+				rString += visit(ctx->dotPrefix()).as<string>();
+				rString += ctx->IDENTIFIER()->toString();
+			}
+			if(ctx->ERROR() !=NULL)
+				rString += ctx->ERROR()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitDotPrefix(P416Parser::DotPrefixContext *ctx) override
+		{
+			string rString=ctx->DOT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitSpecializedType(P416Parser::SpecializedTypeContext *ctx) override
+		{
+			string rString="";
+			rString += visit(ctx->prefixedType()).as<string>();
+			rString += ctx->LT()->toString();
+			rString += visit(ctx->typeArgumentList()).as<string>();
+			rString += ctx->GT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitHeaderStackType(P416Parser::HeaderStackTypeContext *ctx) override
+		{
+			string rString="";
+			rString += visit(ctx->typeName()).as<string>();
+			rString += ctx->LBRKT()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			rString += ctx->RBRKT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitTupleType(P416Parser::TupleTypeContext *ctx) override
+		{
+			string rString="";
+			rString += visit(ctx->TUPLE()).as<string>();
+			rString += ctx->LT()->toString();
+			rString += visit(ctx->typeArgumentList()).as<string>();
+			rString += ctx->GT()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override
+		{
+			string rString="";
+			if(ctx->decimalNumber() !=nullptr)
+				rString += visit(ctx->decimalNumber()).as<string>();
+			if(ctx->octalNumber() !=nullptr)
+				rString += visit(ctx->octalNumber()).as<string>();
+			if(ctx->binaryNumber() !=nullptr)
+				rString += visit(ctx->binaryNumber()).as<string>();
+			if(ctx->hexNumber() !=nullptr)
+				rString += visit(ctx->hexNumber()).as<string>();
+			if(ctx->realNumber() !=nullptr)
+				rString += visit(ctx->realNumber()).as<string>();
+			return rString;
+		}
+
+		antlrcpp::Any visitHexNumber(P416Parser::HexNumberContext *ctx) override
+		{
+			string rString="";
+			return ctx->Hex_number()->toString();
+		}
+		antlrcpp::Any visitBinaryNumber(P416Parser::BinaryNumberContext *ctx) override
+		{
+			string rString="";
+			return ctx->Binary_number()->toString();
+		}
+		antlrcpp::Any visitRealNumber(P416Parser::RealNumberContext *ctx) override
+		{
+			string rString="";
+			return ctx->Real_number()->toString();
+		}
+		antlrcpp::Any visitOctalNumber(P416Parser::OctalNumberContext *ctx) override
+		{
+			string rString="";
+			return ctx->Octal_number()->toString();
+		}
+		antlrcpp::Any visitDecimalNumber(P416Parser::DecimalNumberContext *ctx) override
+		{
+			string rString="";
+			return ctx->Decimal_number()->toString();
+		}
+		antlrcpp::Any visitConstantDeclaration(P416Parser::ConstantDeclarationContext *ctx) override
+		{
+			string rString  = "";
+			cout << "constant declaration  : " << ctx->getText()<<endl;
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			//string rString = ctx->optAnnotations()->getText();
+			rString = ctx->CONST()->toString();
+			string typeRefString = visit(ctx->typeRef()).as<string>();
+			rString += typeRefString ;
+			string name = visit(ctx->name()).as<string>();
+			rString += name;
+			rString += ctx->ASSIGN()->toString();
+			string x = visit(ctx->initializer()).as<string>();
+			rString +=x;
+			unsigned int s;
+			if (x[1]== 'x' || x[1]=='X')
+				s = std::stoul(x, nullptr, 16);
+			else if (x[1] == 'b' || x[1]=='B')
+				s = std::stoul(x, nullptr, 2);
+			else if (x[0]== '0')
+				s = std::stoul(x, nullptr, 8);
+			else
+				s = std::stoul(x, nullptr, 10);
+			cout << "\n---\n---\n----\n";
+			if (typedefMap.find(typeRefString) == typedefMap.end() )
+				;
+			else
+			{
+				string actualType = typedefMap.find(typeRefString)->second;
+				cout << "\n\n\nfound\n"<<actualType<<"\n\n\n";
+				if(actualType.compare(0,4,"bit<")==0)
+				{
+
+					string widthString =  actualType.substr(4,actualType.length()-5);
+					if (widthString[1] == 'x' || widthString[1]=='X');
+					else if (widthString[1]== 'b' || widthString[1]=='B');
+					else if (widthString[0]== '0');
+
+					else
+					{
+						unsigned int width = stoul(widthString);
+						cout << "width : " <<width <<endl;
+						auto *L = ConstantInt::get(Type::getIntNTy(context,width),s);
+						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
+						builder.CreateStore(L,tmp,false);
+						builder.CreateStore(L,tmp,false);
+					}
+				}
+			}
+
+//			auto *L = ConstantInt::get(Type::getIntNTy(context,5),s);
+//			Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,5),nullptr);
+//			builder.CreateStore(L,tmp,false);
+			return rString;
+		}
+		antlrcpp::Any visitOptAnnotations(P416Parser::OptAnnotationsContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->annotations()!=nullptr)
+			{
+				rString += visit(ctx->annotations()).as<string>();
+			}
+			return rString;
+		}
+		antlrcpp::Any visitAnnotations(P416Parser::AnnotationsContext *ctx) override
+		{
+			string rString = visit(ctx->annotation(0)).as<string>();
+			for (int i=1,len=ctx->annotation().size();i<len;i++)
+			{
+				rString += visit(ctx->annotation(i)).as<string>();
+			}
+			return rString;
+		}
+		antlrcpp::Any visitSimpleAnnotation(P416Parser::SimpleAnnotationContext *ctx) override
+		{
+			return ctx->getText();
+		}
+		antlrcpp::Any visitComplexAnnotation(P416Parser::ComplexAnnotationContext *ctx) override
+		{
+			return ctx->getText();
+		}
+		antlrcpp::Any visitDerivedTypeDeclaration(P416Parser::DerivedTypeDeclarationContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->headerTypeDeclaration() != nullptr)
+				rString += visit(ctx->headerTypeDeclaration()).as<string>();
+			if (ctx->headerUnionDeclaration() != nullptr)
+				rString += visit(ctx->headerUnionDeclaration()).as<string>();
+			if (ctx->structTypeDeclaration() != nullptr)
+				rString += visit(ctx->structTypeDeclaration()).as<string>();
+			if (ctx->enumDeclaration() != nullptr)
+				rString += visit(ctx->enumDeclaration()).as<string>();
+			return rString;
+		}
+		antlrcpp::Any visitHeaderTypeDeclaration(P416Parser::HeaderTypeDeclarationContext *ctx) override
+		{
+			string rString  = "";
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->HEADER()->toString();
+			if (ctx->name() != nullptr)
+				rString += visit(ctx->name()).as<string>();
+			rString += ctx->LCURL()->toString();
+			if (ctx->structFieldList() != nullptr )
+				rString += visit(ctx->structFieldList()).as<string>();
+			rString += ctx->RCURL()->toString();
+			return ctx->getText();
+		}
+		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->HEADER_UNION()->toString();
+			rString += visit(ctx->name()).as<string>();
+			rString += ctx->LCURL()->toString();
+			if (ctx->structFieldList() != nullptr)
+				rString += visit(ctx->structFieldList()).as<string>();
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->STRUCT()->toString();
+			rString += visit(ctx->name()).as<string>();
+			rString += ctx->LCURL()->toString();
+			if (ctx->structFieldList() != nullptr)
+				rString += visit(ctx->structFieldList()).as<string>();
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+		antlrcpp::Any visitEnumDeclaration(P416Parser::EnumDeclarationContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->ENUM()->toString();
+			rString += visit(ctx->name()).as<string>();
+			rString += ctx->LCURL()->toString();
+			rString += visit(ctx->identifierList()).as<string>();
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override
+		{
+			string rString = visit(ctx->structField(0)).as<string>();
+			for (int i=1,len=ctx->structField().size();i<len;i++)
+			{
+				rString += visit(ctx->structField(i)).as<string>();
+			}
+			return rString;
+		}
+
+		antlrcpp::Any visitStructField(P416Parser::StructFieldContext *ctx) override
+		{
+			string rString  = "";
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			string typeRefString = visit(ctx->typeRef()).as<string>();
+			rString += typeRefString ;
+			string name = visit(ctx->name()).as<string>();
+			rString += name;
+			if (typedefMap.find(typeRefString) == typedefMap.end() )
+				;
+			else
+			{
+				string actualType = typedefMap.find(typeRefString)->second;
+				if(actualType.compare(0,4,"bit<")==0)
+				{
+					string widthString =  actualType.substr(4,actualType.length()-5);
+					if (widthString[1] == 'x' || widthString[1]=='X');
+					else if (widthString[1]== 'b' || widthString[1]=='B');
+					else if (widthString[0]== '0');
+					else
+					{
+						unsigned int width = stoul(widthString);
+						cout << "width : " <<width <<endl;
+						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
+					}
+				}
+			}
+			return rString;
+		}
+		antlrcpp::Any visitVariableDeclaration(P416Parser::VariableDeclarationContext *ctx) override
+		{
+			string rString = "";
+			if (ctx->annotations()==nullptr || ctx->annotations()->isEmpty());
+			else
+				rString +=visit(ctx->annotations()).as<string>();
+			string typeRefString = visit(ctx->typeRef()).as<string>();
+			rString += typeRefString ;
+			string name = visit(ctx->name()).as<string>();
+			rString += name;
+			if (typedefMap.find(typeRefString) == typedefMap.end() )
+				;
+			else
+			{
+				string actualType = typedefMap.find(typeRefString)->second;
+				if(actualType.compare(0,4,"bit<")==0)
+				{
+					string widthString =  actualType.substr(4,actualType.length()-5);
+					if (widthString[1] == 'x' || widthString[1]=='X');
+					else if (widthString[1]== 'b' || widthString[1]=='B');
+					else if (widthString[0]== '0');
+					else
+					{
+						unsigned int width = stoul(widthString);
+						cout << "width : " <<width <<endl;
+						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
+					}
+				}
+			}
+			if (ctx->optInitializer() != nullptr)
+				rString += visit(ctx->optInitializer()).as<string>();
+
+			return rString;
+		}
+
+
+};
+//
+//class MyDefinitionVisitor:public P416BaseVisitor{
+//
+//public:
+//	antlrcpp::Any visitAssignmentStatement(P416Parser::AssignmentStatementContext *ctx) override
+//	{
+//		lvalue ASSIGN  expression SEMI;
+//
+//	}
+//};
+
+int main()
+{
+	std::ifstream stream;
+	stream.open("/Users/hishukl2/Documents/p4antlr/sample.p4");
+
+
+
+
+
+	llvm::Function *mainFunc =
+	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
+
+	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label1", mainFunc);
+	builder.SetInsertPoint(entry);
+
+	llvm::Value *helloWorld = builder.CreateGlobalStringPtr("hello world!\n");
+	std::vector<llvm::Type *> putsArgs;
+	putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
+	llvm::ArrayRef<llvm::Type*>  argsRef(putsArgs);
+
+	llvm::FunctionType *putsType =
+	  llvm::FunctionType::get(builder.getInt32Ty(), argsRef, false);
+	llvm::Constant *putsFunc = module->getOrInsertFunction("puts", putsType);
+	Value *tmp=builder.CreateCall(putsFunc, helloWorld);
+//	builder.CreateAlloca(Type::getInt32Ty(context),nullptr,"foo");
+//
+
+
+	ANTLRInputStream input(stream);
+	P416Lexer lexer(&input);
+	CommonTokenStream tokens(&lexer);
+	P416Parser parser(&tokens);
+	P416Parser::P4programContext* tree = parser.p4program();
+	MyDeclarationVisitor visitor;
+	visitor.visit(tree);
+
+
+
+
+	builder.CreateRet(tmp);
+
+	module->dump();
+
+	for (itr = typedefMap.begin(); itr != typedefMap.end(); ++itr)
+	{
+		cout  <<  '\t' << itr->first
+			  <<  '\t' << itr->second << '\n';
+	}
+
+	return 0;
+}
+
+
