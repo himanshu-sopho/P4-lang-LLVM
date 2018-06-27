@@ -114,19 +114,19 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
 		{
 		//	return visitChildren(ctx);
-			cout << "typeref\n" <<ctx->getText()<<endl;
-			string rString="";
-			if (ctx->baseType() != nullptr)
-				rString += visit(ctx->baseType()).as<string>();
-			if (ctx->typeName() != nullptr)
-				rString += visit(ctx->typeName()).as<string>();
-			if (ctx->specializedType() != nullptr)
-				rString += visit(ctx->specializedType()).as<string>();
-			if (ctx->headerStackType() != nullptr)
-				rString += visit(ctx->headerStackType()).as<string>();
-			if (ctx->tupleType() != nullptr)
-				rString += visit(ctx->tupleType()).as<string>();
-			cout << "gettting out of typeref" <<endl;
+			string rString = ctx->getText();
+//			string rString="";
+//			if (ctx->baseType() != nullptr)
+//				rString += visit(ctx->baseType()).as<string>();
+//			if (ctx->typeName() != nullptr)
+//				rString += visit(ctx->typeName()).as<string>();
+//			if (ctx->specializedType() != nullptr)
+//				rString += visit(ctx->specializedType()).as<string>();
+//			if (ctx->headerStackType() != nullptr)
+//				rString += visit(ctx->headerStackType()).as<string>();
+//			if (ctx->tupleType() != nullptr)
+//				rString += visit(ctx->tupleType()).as<string>();
+//			cout << "gettting out of typeref" <<endl;
 			return rString;
 		}
 
@@ -153,15 +153,17 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			return rString;
 		}
 
-		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx) override
+		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx,string name)
 		{
+			cout << "VisitBitsize type is  runnint" << endl;
 			string rString="";
 			if(ctx->BIT() !=NULL)
 				rString += ctx->BIT()->toString();
 			if(ctx->LT() !=NULL)
 				rString += ctx->LT()->toString();
 			if(ctx->number() !=nullptr)
-				rString += visit(ctx->number()).as<string>();
+				int intValue = visit(ctx->number()).as<int>();
+				//rString += visit(ctx->number()).as<int>();
 			if(ctx->GT() !=NULL)
 				rString += ctx->GT()->toString();
 			return rString;
@@ -175,7 +177,8 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if(ctx->LT() !=NULL)
 				rString += ctx->LT()->toString();
 			if(ctx->number() !=nullptr)
-				rString += visit(ctx->number()).as<string>();
+				int intValue = visit(ctx->number()).as<int>();
+				//rString += visit(ctx->number()).as<int>();
 			if(ctx->GT() !=NULL)
 				rString += ctx->GT()->toString();
 			return rString;
@@ -189,7 +192,8 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if(ctx->LT() !=NULL)
 				rString += ctx->LT()->toString();
 			if(ctx->number() !=nullptr)
-				rString += visit(ctx->number()).as<string>();
+				int intValue = visit(ctx->number()).as<int>();
+				//rString += visit(ctx->number()).as<int>();
 			if(ctx->GT() !=NULL)
 				rString += ctx->GT()->toString();
 			return rString;
@@ -257,7 +261,28 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			return rString;
 		}
 
-		antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override
+		antlrcpp::Any visitInitializer(P416Parser::InitializerContext *ctx) override
+		{
+			int val=-1;
+			//string temp="initializer";
+			//cout << "type of expression : " << endl ;
+			P416Parser::IntegerContext * temp;
+			temp = dynamic_cast<P416Parser::IntegerContext *> (ctx->expression());
+			if(temp!=nullptr){
+				val = visit(ctx->expression()).as<int>();
+				cout << "Return number from expression : " << val << "\n\n\n\n";
+				return val;
+			}
+			return val;
+		}
+
+		/*antlrcpp::Any visitInteger(P416Parser::IntegerContext *ctx) override
+		{
+			return visit(ctx->number()).as<int>();
+		}
+
+
+	/*	antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override
 		{
 			string rString="";
 			if(ctx->decimalNumber() !=nullptr)
@@ -297,7 +322,173 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		{
 			string rString="";
 			return ctx->Decimal_number()->toString();
+		} */
+
+		/*sanket*/
+		antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override{
+
+			int rString=0;
+			if(ctx->decimalNumber()!=nullptr){
+				rString = visit(ctx->decimalNumber()).as<int>();
+			}
+			else if(ctx->octalNumber()!=nullptr){
+				rString=visit(ctx->octalNumber()).as<int>();
+			}
+			else if(ctx->binaryNumber()!=nullptr){
+				rString=visit(ctx->binaryNumber()).as<int>();
+			}
+			else if(ctx->hexNumber()!=nullptr){
+				rString=visit(ctx->hexNumber()).as<int>();
+			}
+			else if(ctx->realNumber()!=nullptr){
+				rString=visit(ctx->realNumber()).as<int>();
+			}
+			cout << "Number" << ":" <<rString << endl;
+			//string temp = "32";
+			return rString;
 		}
+		antlrcpp::Any visitDecimalNumber(P416Parser::DecimalNumberContext *ctx) override{
+
+			string rString;
+			rString += ctx->Decimal_number()->toString();
+			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
+			int sign = 0;
+			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
+			if(rString[sign]=='s' ){
+				cout << "signed" <<endl;
+				sign++;
+				//sign = 2;
+			}
+			else if(rString[sign]=='w'){
+				cout << "unsigned" << endl;
+				sign++;
+				//sign = 2;
+			}
+			else{
+				sign = 0;
+			}
+			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			int intValue = stoi(rString.substr(sign+2,rString.length()-sign-2));
+			cout <<"Int value : " << intValue <<endl<<endl;
+			cout << "DecimalNumber" <<":" <<rString<<endl;
+			//return rString;
+			return intValue;
+		}
+
+		antlrcpp::Any visitOctalNumber(P416Parser::OctalNumberContext *ctx) override{
+
+			string rString;
+			rString += ctx->Octal_number()->toString();
+			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
+			int sign = 0;
+			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
+			if(rString[sign]=='s' ){
+				cout << "signed" <<endl;
+				sign++;
+				//sign = 2;
+			}
+			else if(rString[sign]=='w'){
+				cout << "unsigned" << endl;
+				sign++;
+				//sign = 2;
+			}
+			else{
+				sign = 0;
+			}
+			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,8);
+			cout <<"Int value : " << intValue <<endl<<endl;
+			cout << "OctalNumber" <<":" <<rString<<endl;
+			//return rString;
+			return intValue;
+		}
+
+		antlrcpp::Any visitBinaryNumber(P416Parser::BinaryNumberContext *ctx) override{
+
+			string rString;
+			rString += ctx->Binary_number()->toString();
+			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
+			int sign = 0;
+			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
+			if(rString[sign]=='s' ){
+				cout << "signed" <<endl;
+				sign++;
+				//sign = 2;
+			}
+			else if(rString[sign]=='w'){
+				cout << "unsigned" << endl;
+				sign++;
+				//sign = 2;
+			}
+			else{
+				sign = 0;
+			}
+			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,2);
+			cout <<"Int value : " << intValue <<endl<<endl;
+			cout << "BinaryNumber" <<":" <<rString<<endl;
+			//return rString;
+			return intValue;
+		}
+
+		antlrcpp::Any visitHexNumber(P416Parser::HexNumberContext *ctx) override{
+
+			string rString;
+			rString += ctx->Hex_number()->toString();
+			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
+			int sign = 0;
+			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
+			if(rString[sign]=='s' ){
+				cout << "signed" <<endl;
+				sign++;
+				//sign = 2;
+			}
+			else if(rString[sign]=='w'){
+				cout << "unsigned" << endl;
+				sign++;
+				//sign = 2;
+			}
+			else{
+				sign = 0;
+			}
+			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			int intValue = stoi(rString.substr(sign+2,rString.length()-sign-2),0,16);
+			cout <<"Int value : " << intValue <<endl<<endl;
+			cout << "HexNumber" <<":" <<rString<<endl;
+			//return rString;
+			return intValue;
+		}
+
+		antlrcpp::Any visitRealNumber(P416Parser::RealNumberContext *ctx) override{
+
+			string rString;
+			rString += ctx->Real_number()->toString();
+			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
+			int sign = 0;
+			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
+			cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
+			if(rString[sign]=='s' ){
+				cout << "signed" <<endl;
+				sign++;
+				//sign = 2;
+			}
+			else if(rString[sign]=='w'){
+				cout << "unsigned" << endl;
+				sign++;
+				//sign = 2;
+			}
+			else{
+				sign = 0;
+			}
+			cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
+			cout << "rString length : " << rString.length() <<" " << rString << endl;
+			int intValue = stoi(rString.substr(sign,rString.length()-sign));
+			cout <<"Int value : " << intValue <<endl<<endl;
+			cout << "RealNumber" <<":" <<rString<<endl;
+			//return rString;
+			return intValue;
+		}
+		/*sanket ;*/
 		antlrcpp::Any visitConstantDeclaration(P416Parser::ConstantDeclarationContext *ctx) override
 		{
 			string rString  = "";
@@ -307,23 +498,23 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			//string rString = ctx->optAnnotations()->getText();
 			rString = ctx->CONST()->toString();
-			string typeRefString = visit(ctx->typeRef()).as<string>();
+			string typeRefString = ctx->typeRef()->getText();
 			rString += typeRefString ;
 			string name = visit(ctx->name()).as<string>();
 			rString += name;
 			rString += ctx->ASSIGN()->toString();
-			string x = visit(ctx->initializer()).as<string>();
-			rString +=x;
-			unsigned int s;
-			if (x[1]== 'x' || x[1]=='X')
-				s = std::stoul(x, nullptr, 16);
-			else if (x[1] == 'b' || x[1]=='B')
-				s = std::stoul(x, nullptr, 2);
-			else if (x[0]== '0')
-				s = std::stoul(x, nullptr, 8);
-			else
-				s = std::stoul(x, nullptr, 10);
-			cout << "\n---\n---\n----\n";
+			int x = visit(ctx->initializer()).as<int>();
+			cout << "\nx : " <<x <<endl;
+//			unsigned int s;
+//			if (x[1]== 'x' || x[1]=='X')
+//				s = std::stoul(x, nullptr, 16);
+//			else if (x[1] == 'b' || x[1]=='B')
+//				s = std::stoul(x, nullptr, 2);
+//			else if (x[0]== '0')
+//				s = std::stoul(x, nullptr, 8);
+//			else
+//				s = std::stoul(x, nullptr, 10);
+//			cout << "\n---\n---\n----\n";
 			if (typedefMap.find(typeRefString) == typedefMap.end() )
 				;
 			else
@@ -342,18 +533,16 @@ class MyDeclarationVisitor:public P416BaseVisitor
 					{
 						unsigned int width = stoul(widthString);
 						cout << "width : " <<width <<endl;
-						auto *L = ConstantInt::get(Type::getIntNTy(context,width),s);
+						auto *L = ConstantInt::get(Type::getIntNTy(context,width),x);
 						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
-						builder.CreateStore(L,tmp,false);
-						builder.CreateStore(L,tmp,false);
-					}
+						builder.CreateStore(L,tmp,false);					}
 				}
 			}
 
 //			auto *L = ConstantInt::get(Type::getIntNTy(context,5),s);
 //			Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,5),nullptr);
 //			builder.CreateStore(L,tmp,false);
-			return rString;
+			return nullptr;
 		}
 		antlrcpp::Any visitOptAnnotations(P416Parser::OptAnnotationsContext *ctx) override
 		{
@@ -466,7 +655,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
-			string typeRefString = visit(ctx->typeRef()).as<string>();
+			string typeRefString = ctx->typeRef()->getText();
 			rString += typeRefString ;
 			string name = visit(ctx->name()).as<string>();
 			rString += name;
@@ -497,7 +686,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if (ctx->annotations()==nullptr || ctx->annotations()->isEmpty());
 			else
 				rString +=visit(ctx->annotations()).as<string>();
-			string typeRefString = visit(ctx->typeRef()).as<string>();
+			string typeRefString = ctx->typeRef()->getText();
 			rString += typeRefString ;
 			string name = visit(ctx->name()).as<string>();
 			rString += name;
