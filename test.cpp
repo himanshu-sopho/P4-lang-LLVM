@@ -777,8 +777,6 @@ int main()
 			  <<  '\t' << itr->second << '\n';
 	}
 	
-	cout << "Checking the git uplaod for the given file" << endl;
-
 	return 0;
 }
 
