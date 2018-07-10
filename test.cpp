@@ -27,20 +27,23 @@ using namespace llvm;
 using namespace std;
 using namespace antlr4;
 
-map <string,string> typedefMap;
-map <string, string> :: iterator itr;
+map <string,struct SimpleVariable> typedefMap;
+map <string, struct SimpleVariable> :: iterator itr;
 
 
 static LLVMContext context;
 llvm::Module* module = new llvm::Module("top", context);
 llvm::IRBuilder<> builder(context);
+llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 
-
-
-llvm::FunctionType *funcType =
-  llvm::FunctionType::get(builder.getInt32Ty(), false);
-
-
+struct SimpleVariable
+{
+	bool isSigned=0;
+	bool isBool = 0;
+	bool isError = 0;
+	unsigned int Width=0;
+	long long int Value=0;
+};
 
 class MyDeclarationVisitor:public P416BaseVisitor
 {
@@ -102,14 +105,28 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitSimpleTypeDef(P416Parser::SimpleTypeDefContext *ctx) override
 		{
-			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->typeRef()->getText()));
+			cout << "typedef\n\n";
+			struct SimpleVariable *temp;
+			temp = dynamic_cast<struct SimpleVariable *> (ctx->typeRef());
+			if (temp ==nullptr)
+					cout << "\ndushvaar\n\n";
+			//if (temp != nullptr){
+
+
+				auto a = visit(ctx->typeRef()).as<struct SimpleVariable>();
+				cout << "cast successful: type : " <<typeid(a).name()<<endl<<typeid(temp).name()<<endl;
+				cout << "value: " <<a.Value<<" width: "<<a.Width<<endl;
+				cout << "\n\n----------cs2-------\n\n";
+				typedefMap.insert(pair <string, struct SimpleVariable> (ctx->name()->getText(),a));
+			//}
+
 			return visitChildren(ctx);
 		}
-		antlrcpp::Any visitDerivedTypeDef(P416Parser::DerivedTypeDefContext *ctx) override
-		{
-			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->derivedTypeDeclaration()->getText()));
-			return visitChildren(ctx);
-		}
+//		antlrcpp::Any visitDerivedTypeDef(P416Parser::DerivedTypeDefContext *ctx) override
+//		{
+//			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->derivedTypeDeclaration()->getText()));
+//			return visitChildren(ctx);
+//		}
 
 		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
 		{
@@ -127,80 +144,131 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //			if (ctx->tupleType() != nullptr)
 //				rString += visit(ctx->tupleType()).as<string>();
 //			cout << "gettting out of typeref" <<endl;
+			//struct SimpleVariable *tmp;
+			if (ctx->baseType() != nullptr)
+			{
+				struct SimpleVariable temp=  (visit(ctx->baseType()).as<struct SimpleVariable>());
+				return temp;
+			//	(visit(ctx->baseType()));
+			}
 			return rString;
 		}
 
 		antlrcpp::Any visitBoolType(P416Parser::BoolTypeContext *ctx) override
 		{
-			string rString="";
-			if(ctx->BOOL() !=NULL)
-				rString += ctx->BOOL()->toString();
-			return rString;
+		//	string rString="";
+		//	if(ctx->BOOL() !=NULL)
+		//		rString += ctx->BOOL()->toString();
+			cout << "bool"<<endl;
+			struct SimpleVariable a;
+			a.isBool = true;
+			a.Width = 8;
+			return a;
+			//return rString;
 		}
+//		antlrcpp::Any visitErrorType(P416Parser::ErrorTypeContext *ctx) override
+//		{
+//			string rString="";
+//			if(ctx->ERROR() !=NULL)
+//				rString += ctx->ERROR()->toString();
+//			return rString;
+//		}
 		antlrcpp::Any visitErrorType(P416Parser::ErrorTypeContext *ctx) override
 		{
-			string rString="";
-			if(ctx->ERROR() !=NULL)
-				rString += ctx->ERROR()->toString();
-			return rString;
+			cout << "error"<<endl;
+			struct SimpleVariable a;
+			a.isError = true;
+			return a;
 		}
 
+//		antlrcpp::Any visitBitType(P416Parser::BitTypeContext *ctx) override
+//		{
+//			string rString="";
+//			if(ctx->BIT() !=NULL)
+//				rString += ctx->BIT()->toString();
+//			return rString;
+//		}
 		antlrcpp::Any visitBitType(P416Parser::BitTypeContext *ctx) override
 		{
-			string rString="";
-			if(ctx->BIT() !=NULL)
-				rString += ctx->BIT()->toString();
-			return rString;
+			cout << "bit"<<endl;
+			struct SimpleVariable a;
+			a.isSigned = false;
+			a.Width = 1;
+			return a;
 		}
-
-		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx,string name)
+//		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx,string name) override
+//		{
+//			cout << "VisitBitsize type is  runnint" << endl;
+//			string rString="";
+//			if(ctx->BIT() !=NULL)
+//				rString += ctx->BIT()->toString();
+//			if(ctx->LT() !=NULL)
+//				rString += ctx->LT()->toString();
+//			if(ctx->number() !=nullptr)
+//				int intValue = visit(ctx->number()).as<int>();
+//				//rString += visit(ctx->number()).as<int>();
+//			if(ctx->GT() !=NULL)
+//				rString += ctx->GT()->toString();
+//			return rString;
+//		}
+		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx) override
 		{
-			cout << "VisitBitsize type is  runnint" << endl;
-			string rString="";
-			if(ctx->BIT() !=NULL)
-				rString += ctx->BIT()->toString();
-			if(ctx->LT() !=NULL)
-				rString += ctx->LT()->toString();
-			if(ctx->number() !=nullptr)
-				int intValue = visit(ctx->number()).as<int>();
-				//rString += visit(ctx->number()).as<int>();
-			if(ctx->GT() !=NULL)
-				rString += ctx->GT()->toString();
-			return rString;
+			cout << "bitsize"<<endl;
+			struct SimpleVariable a;
+			a.isSigned = false;
+			a.Width = visit(ctx->number()).as<int>();
+			return a;
 		}
 
+//		antlrcpp::Any visitIntSizeType(P416Parser::IntSizeTypeContext *ctx) override
+//		{
+//			string rString="";
+//			if(ctx->INT() !=NULL)
+//				rString += ctx->INT()->toString();
+//			if(ctx->LT() !=NULL)
+//				rString += ctx->LT()->toString();
+//			if(ctx->number() !=nullptr)
+//				int intValue = visit(ctx->number()).as<int>();
+//				//rString += visit(ctx->number()).as<int>();
+//			if(ctx->GT() !=NULL)
+//				rString += ctx->GT()->toString();
+//			return rString;
+//		}
 		antlrcpp::Any visitIntSizeType(P416Parser::IntSizeTypeContext *ctx) override
 		{
-			string rString="";
-			if(ctx->INT() !=NULL)
-				rString += ctx->INT()->toString();
-			if(ctx->LT() !=NULL)
-				rString += ctx->LT()->toString();
-			if(ctx->number() !=nullptr)
-				int intValue = visit(ctx->number()).as<int>();
-				//rString += visit(ctx->number()).as<int>();
-			if(ctx->GT() !=NULL)
-				rString += ctx->GT()->toString();
-			return rString;
+			cout << "intsize"<<endl;
+			struct SimpleVariable a;
+			a.isSigned = true;
+			a.Width = visit(ctx->number()).as<int>();
+			return a;
 		}
 
+//		antlrcpp::Any visitVarBitSizeType(P416Parser::VarBitSizeTypeContext *ctx) override
+//		{
+//			string rString="";
+//			if(ctx->VARBIT() !=NULL)
+//				rString += ctx->VARBIT()->toString();
+//			if(ctx->LT() !=NULL)
+//				rString += ctx->LT()->toString();
+//			if(ctx->number() !=nullptr)
+//				int intValue = visit(ctx->number()).as<int>();
+//				//rString += visit(ctx->number()).as<int>();
+//			if(ctx->GT() !=NULL)
+//				rString += ctx->GT()->toString();
+//			return rString;
+//		}
 		antlrcpp::Any visitVarBitSizeType(P416Parser::VarBitSizeTypeContext *ctx) override
 		{
-			string rString="";
-			if(ctx->VARBIT() !=NULL)
-				rString += ctx->VARBIT()->toString();
-			if(ctx->LT() !=NULL)
-				rString += ctx->LT()->toString();
-			if(ctx->number() !=nullptr)
-				int intValue = visit(ctx->number()).as<int>();
-				//rString += visit(ctx->number()).as<int>();
-			if(ctx->GT() !=NULL)
-				rString += ctx->GT()->toString();
-			return rString;
+			cout << "varbitsize"<<endl;
+			struct SimpleVariable a;
+			a.isSigned = true;
+			a.Width = visit(ctx->number()).as<int>();
+			return a;
 		}
 
 		antlrcpp::Any visitTypeName(P416Parser::TypeNameContext *ctx) override
 		{
+			cout << "dbg2"<<endl;
 			string rString="";
 //			antlrcpp::Any temp = visit(ctx->prefixedType());
 //			if(temp.isNotNull())
@@ -276,8 +344,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			return val;
 		}
 
-		/*antlrcpp::Any visitInteger(P416Parser::IntegerContext *ctx) override
+		antlrcpp::Any visitInteger(P416Parser::IntegerContext *ctx) override
 		{
+			cout << "i am going in integer\n\n";
 			return visit(ctx->number()).as<int>();
 		}
 
@@ -505,6 +574,11 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			rString += ctx->ASSIGN()->toString();
 			int x = visit(ctx->initializer()).as<int>();
 			cout << "\nx : " <<x <<endl;
+			cout << "\nlength : " << typedefMap.size()<<endl;
+				for (itr = typedefMap.begin(); itr != typedefMap.end(); ++itr)
+				{
+					cout  <<  '\t' << itr->first << '\t'<< itr->second.Width;
+				}
 //			unsigned int s;
 //			if (x[1]== 'x' || x[1]=='X')
 //				s = std::stoul(x, nullptr, 16);
@@ -519,29 +593,35 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				;
 			else
 			{
-				string actualType = typedefMap.find(typeRefString)->second;
-				cout << "\n\n\nfound\n"<<actualType<<"\n\n\n";
-				if(actualType.compare(0,4,"bit<")==0)
-				{
+				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				auto *L = ConstantInt::get(Type::getIntNTy(context,actualType.Width),x);
+				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
+				builder.CreateStore(L,tmp,false);
 
-					string widthString =  actualType.substr(4,actualType.length()-5);
-					if (widthString[1] == 'x' || widthString[1]=='X');
-					else if (widthString[1]== 'b' || widthString[1]=='B');
-					else if (widthString[0]== '0');
+//				if(actualType.compare(0,4,"bit<")==0)
+//				{
+//
+//					string widthString =  actualType.substr(4,actualType.length()-5);
+//					if (widthString[1] == 'x' || widthString[1]=='X');
+//					else if (widthString[1]== 'b' || widthString[1]=='B');
+//					else if (widthString[0]== '0');
+//
+//					else
+//					{
+//						unsigned int width = stoul(widthString);
+//						cout << "width : " <<width <<endl;
+//						auto *L = ConstantInt::get(Type::getIntNTy(context,width),x);
+//						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
+//						builder.CreateStore(L,tmp,false);					}
+//				}
 
-					else
-					{
-						unsigned int width = stoul(widthString);
-						cout << "width : " <<width <<endl;
-						auto *L = ConstantInt::get(Type::getIntNTy(context,width),x);
-						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
-						builder.CreateStore(L,tmp,false);					}
-				}
 			}
 
 //			auto *L = ConstantInt::get(Type::getIntNTy(context,5),s);
 //			Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,5),nullptr);
 //			builder.CreateStore(L,tmp,false);
+			cout << "\n\nfounf\n";
 			return nullptr;
 		}
 		antlrcpp::Any visitOptAnnotations(P416Parser::OptAnnotationsContext *ctx) override
@@ -596,6 +676,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if (ctx->structFieldList() != nullptr )
 				rString += visit(ctx->structFieldList()).as<string>();
 			rString += ctx->RCURL()->toString();
+
 			return ctx->getText();
 		}
 		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
@@ -610,6 +691,8 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			if (ctx->structFieldList() != nullptr)
 				rString += visit(ctx->structFieldList()).as<string>();
 			rString += ctx->RCURL()->toString();
+
+
 			return rString;
 		}
 		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
@@ -663,8 +746,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				;
 			else
 			{
-				string actualType = typedefMap.find(typeRefString)->second;
-				if(actualType.compare(0,4,"bit<")==0)
+				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+
+				/*if(actualType.compare(0,4,"bit<")==0)
 				{
 					string widthString =  actualType.substr(4,actualType.length()-5);
 					if (widthString[1] == 'x' || widthString[1]=='X');
@@ -676,7 +760,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 						cout << "width : " <<width <<endl;
 						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
 					}
-				}
+				}*/
+				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 			}
 			return rString;
 		}
@@ -694,8 +780,8 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				;
 			else
 			{
-				string actualType = typedefMap.find(typeRefString)->second;
-				if(actualType.compare(0,4,"bit<")==0)
+				//string actualType = typedefMap.find(typeRefString)->second;
+				/*if(actualType.compare(0,4,"bit<")==0)
 				{
 					string widthString =  actualType.substr(4,actualType.length()-5);
 					if (widthString[1] == 'x' || widthString[1]=='X');
@@ -707,15 +793,16 @@ class MyDeclarationVisitor:public P416BaseVisitor
 						cout << "width : " <<width <<endl;
 						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
 					}
-				}
+				} */
+				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 			}
 			if (ctx->optInitializer() != nullptr)
 				rString += visit(ctx->optInitializer()).as<string>();
 
 			return rString;
 		}
-
-
 };
 //
 //class MyDefinitionVisitor:public P416BaseVisitor{
@@ -733,10 +820,6 @@ int main()
 	std::ifstream stream;
 	stream.open("/Users/hishukl2/Documents/p4antlr/sample.p4");
 
-
-
-
-
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
 
@@ -744,6 +827,7 @@ int main()
 	builder.SetInsertPoint(entry);
 
 	llvm::Value *helloWorld = builder.CreateGlobalStringPtr("hello world!\n");
+
 	std::vector<llvm::Type *> putsArgs;
 	putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
 	llvm::ArrayRef<llvm::Type*>  argsRef(putsArgs);
@@ -765,18 +849,12 @@ int main()
 	visitor.visit(tree);
 
 
-
-
 	builder.CreateRet(tmp);
-
 	module->dump();
 
-	for (itr = typedefMap.begin(); itr != typedefMap.end(); ++itr)
-	{
-		cout  <<  '\t' << itr->first
-			  <<  '\t' << itr->second << '\n';
-	}
-	
+
+
+
 	return 0;
 }
 
