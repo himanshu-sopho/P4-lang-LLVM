@@ -5,7 +5,10 @@ project("To Do List")
 
 enable_testing()
 SET(CMAKE_C_COMPILER /usr/bin/gcc)
-SET(CMAKE_CXX_COMPILER /usr/bin/g++)
+#SET(CMAKE_CXX_COMPILER /usr/bin/g++)
+SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+
+#ET(CMAKE_CXX_COMPILER /Users/hishukl2/Documents/LLVM/build/bin/clang-cpp)
 
 # if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
 #     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -21,7 +24,7 @@ SET(CMAKE_CXX_COMPILER /usr/bin/g++)
 #         CACHE STRING "Flags used by the compiler during all build types." FORCE)
 # endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -I/usr/local/include/antlr4-runtime -I/usr/local/include/llvm")
+set(CMAKE_CXX_FLAGS "-std=c++11 ")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(IncludeFiles)
@@ -30,8 +33,6 @@ include_directories("/usr/local/include/antlr4-runtime/")
 include_directories("/usr/local/include/llvm/")
 
 add_executable(codegen test.cpp)
-
-link_directories(/usr/local/lib)
 
 
 target_link_libraries(codegen include_file)

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libinclude_file.a  CMakeFiles/include_file.dir/P416Lexer.cpp.o CMakeFiles/include_file.dir/P416Parser.cpp.o
+/usr/bin/ranlib libinclude_file.a

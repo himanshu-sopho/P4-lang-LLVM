@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <string>
-#include <antlr4-runtime.h>
 #include "IncludeFiles/P416BaseVisitor.h"
 #include "IncludeFiles/P416Parser.h"
 #include "IncludeFiles/P416Visitor.h"
@@ -20,8 +19,8 @@
 #include "IR/Module.h"
 #include <map>
 #include <iterator>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 using namespace llvm;
 using namespace std;
@@ -105,18 +104,18 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitSimpleTypeDef(P416Parser::SimpleTypeDefContext *ctx) override
 		{
-			cout << "typedef\n\n";
+			//cout << "typedef\n\n";
 			struct SimpleVariable *temp;
 			temp = dynamic_cast<struct SimpleVariable *> (ctx->typeRef());
-			if (temp ==nullptr)
-					cout << "\ndushvaar\n\n";
+	//		if (temp ==nullptr)
+	//				cout << "\ndushvaar\n\n";
 			//if (temp != nullptr){
 
 
 				auto a = visit(ctx->typeRef()).as<struct SimpleVariable>();
-				cout << "cast successful: type : " <<typeid(a).name()<<endl<<typeid(temp).name()<<endl;
-				cout << "value: " <<a.Value<<" width: "<<a.Width<<endl;
-				cout << "\n\n----------cs2-------\n\n";
+				//cout << "cast successful: type : " <<typeid(a).name()<<endl<<typeid(temp).name()<<endl;
+				//cout << "value: " <<a.Value<<" width: "<<a.Width<<endl;
+				//cout << "\n\n----------cs2-------\n\n";
 				typedefMap.insert(pair <string, struct SimpleVariable> (ctx->name()->getText(),a));
 			//}
 
@@ -159,7 +158,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		//	string rString="";
 		//	if(ctx->BOOL() !=NULL)
 		//		rString += ctx->BOOL()->toString();
-			cout << "bool"<<endl;
+			//cout << "bool"<<endl;
 			struct SimpleVariable a;
 			a.isBool = true;
 			a.Width = 8;
@@ -175,7 +174,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitErrorType(P416Parser::ErrorTypeContext *ctx) override
 		{
-			cout << "error"<<endl;
+			//cout << "error"<<endl;
 			struct SimpleVariable a;
 			a.isError = true;
 			return a;
@@ -190,7 +189,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitBitType(P416Parser::BitTypeContext *ctx) override
 		{
-			cout << "bit"<<endl;
+			//cout << "bit"<<endl;
 			struct SimpleVariable a;
 			a.isSigned = false;
 			a.Width = 1;
@@ -213,7 +212,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitBitSizeType(P416Parser::BitSizeTypeContext *ctx) override
 		{
-			cout << "bitsize"<<endl;
+			//cout << "bitsize"<<endl;
 			struct SimpleVariable a;
 			a.isSigned = false;
 			a.Width = visit(ctx->number()).as<int>();
@@ -236,7 +235,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitIntSizeType(P416Parser::IntSizeTypeContext *ctx) override
 		{
-			cout << "intsize"<<endl;
+			//cout << "intsize"<<endl;
 			struct SimpleVariable a;
 			a.isSigned = true;
 			a.Width = visit(ctx->number()).as<int>();
@@ -259,7 +258,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitVarBitSizeType(P416Parser::VarBitSizeTypeContext *ctx) override
 		{
-			cout << "varbitsize"<<endl;
+			//cout << "varbitsize"<<endl;
 			struct SimpleVariable a;
 			a.isSigned = true;
 			a.Width = visit(ctx->number()).as<int>();
@@ -268,7 +267,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitTypeName(P416Parser::TypeNameContext *ctx) override
 		{
-			cout << "dbg2"<<endl;
+			//cout << "dbg2"<<endl;
 			string rString="";
 //			antlrcpp::Any temp = visit(ctx->prefixedType());
 //			if(temp.isNotNull())
@@ -338,7 +337,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			temp = dynamic_cast<P416Parser::IntegerContext *> (ctx->expression());
 			if(temp!=nullptr){
 				val = visit(ctx->expression()).as<int>();
-				cout << "Return number from expression : " << val << "\n\n\n\n";
+				//cout << "Return number from expression : " << val << "\n\n\n\n";
 				return val;
 			}
 			return val;
@@ -346,7 +345,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitInteger(P416Parser::IntegerContext *ctx) override
 		{
-			cout << "i am going in integer\n\n";
+			//cout << "i am going in integer\n\n";
 			return visit(ctx->number()).as<int>();
 		}
 
@@ -412,7 +411,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			else if(ctx->realNumber()!=nullptr){
 				rString=visit(ctx->realNumber()).as<int>();
 			}
-			cout << "Number" << ":" <<rString << endl;
+			//cout << "Number" << ":" <<rString << endl;
 			//string temp = "32";
 			return rString;
 		}
@@ -424,22 +423,22 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				cout << "signed" <<endl;
+				//cout << "signed" <<endl;
 				sign++;
 				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				cout << "unsigned" << endl;
+				//cout << "unsigned" << endl;
 				sign++;
 				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = stoi(rString.substr(sign+2,rString.length()-sign-2));
-			cout <<"Int value : " << intValue <<endl<<endl;
-			cout << "DecimalNumber" <<":" <<rString<<endl;
+			//cout <<"Int value : " << intValue <<endl<<endl;
+			//cout << "DecimalNumber" <<":" <<rString<<endl;
 			//return rString;
 			return intValue;
 		}
@@ -452,22 +451,22 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				cout << "signed" <<endl;
+				//cout << "signed" <<endl;
 				sign++;
 				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				cout << "unsigned" << endl;
+				//cout << "unsigned" << endl;
 				sign++;
 				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,8);
-			cout <<"Int value : " << intValue <<endl<<endl;
-			cout << "OctalNumber" <<":" <<rString<<endl;
+			//cout <<"Int value : " << intValue <<endl<<endl;
+			//cout << "OctalNumber" <<":" <<rString<<endl;
 			//return rString;
 			return intValue;
 		}
@@ -480,22 +479,22 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				cout << "signed" <<endl;
+				//cout << "signed" <<endl;
 				sign++;
 				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				cout << "unsigned" << endl;
+				//cout << "unsigned" << endl;
 				sign++;
 				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,2);
-			cout <<"Int value : " << intValue <<endl<<endl;
-			cout << "BinaryNumber" <<":" <<rString<<endl;
+			//cout <<"Int value : " << intValue <<endl<<endl;
+			//cout << "BinaryNumber" <<":" <<rString<<endl;
 			//return rString;
 			return intValue;
 		}
@@ -508,22 +507,22 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				cout << "signed" <<endl;
+				//cout << "signed" <<endl;
 				sign++;
 				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				cout << "unsigned" << endl;
+				//cout << "unsigned" << endl;
 				sign++;
 				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			cout << "rString length : " << rString.length() <<" " << rString<< endl;
+			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = stoi(rString.substr(sign+2,rString.length()-sign-2),0,16);
-			cout <<"Int value : " << intValue <<endl<<endl;
-			cout << "HexNumber" <<":" <<rString<<endl;
+			//cout <<"Int value : " << intValue <<endl<<endl;
+			//cout << "HexNumber" <<":" <<rString<<endl;
 			//return rString;
 			return intValue;
 		}
@@ -535,25 +534,25 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			rString.erase(std::remove(rString.begin(), rString.end(), '_'), rString.end());
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
-			cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
+			//cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
 			if(rString[sign]=='s' ){
-				cout << "signed" <<endl;
+				//cout << "signed" <<endl;
 				sign++;
 				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				cout << "unsigned" << endl;
+				//cout << "unsigned" << endl;
 				sign++;
 				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
-			cout << "rString length : " << rString.length() <<" " << rString << endl;
+			//cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
+			//cout << "rString length : " << rString.length() <<" " << rString << endl;
 			int intValue = stoi(rString.substr(sign,rString.length()-sign));
-			cout <<"Int value : " << intValue <<endl<<endl;
-			cout << "RealNumber" <<":" <<rString<<endl;
+			//cout <<"Int value : " << intValue <<endl<<endl;
+			//cout << "RealNumber" <<":" <<rString<<endl;
 			//return rString;
 			return intValue;
 		}
@@ -561,7 +560,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitConstantDeclaration(P416Parser::ConstantDeclarationContext *ctx) override
 		{
 			string rString  = "";
-			cout << "constant declaration  : " << ctx->getText()<<endl;
+			//cout << "constant declaration  : " << ctx->getText()<<endl;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
@@ -573,11 +572,11 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			rString += name;
 			rString += ctx->ASSIGN()->toString();
 			int x = visit(ctx->initializer()).as<int>();
-			cout << "\nx : " <<x <<endl;
-			cout << "\nlength : " << typedefMap.size()<<endl;
+			//cout << "\nx : " <<x <<endl;
+			//cout << "\nlength : " << typedefMap.size()<<endl;
 				for (itr = typedefMap.begin(); itr != typedefMap.end(); ++itr)
 				{
-					cout  <<  '\t' << itr->first << '\t'<< itr->second.Width;
+					//cout  <<  '\t' << itr->first << '\t'<< itr->second.Width;
 				}
 //			unsigned int s;
 //			if (x[1]== 'x' || x[1]=='X')
@@ -594,7 +593,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			else
 			{
 				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
-				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				//cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
 				auto *L = ConstantInt::get(Type::getIntNTy(context,actualType.Width),x);
 				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 				builder.CreateStore(L,tmp,false);
@@ -621,7 +620,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //			auto *L = ConstantInt::get(Type::getIntNTy(context,5),s);
 //			Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,5),nullptr);
 //			builder.CreateStore(L,tmp,false);
-			cout << "\n\nfounf\n";
+			//cout << "\n\nfounf\n";
 			return nullptr;
 		}
 		antlrcpp::Any visitOptAnnotations(P416Parser::OptAnnotationsContext *ctx) override
@@ -761,7 +760,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 						Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,width),nullptr,name);
 					}
 				}*/
-				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				//cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
 				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 			}
 			return rString;
@@ -795,7 +794,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 					}
 				} */
 				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
-				cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
+				//cout << "\n\n\nfound\n"<<typeid(actualType).name()<<"\n\n\n";
 				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 			}
 			if (ctx->optInitializer() != nullptr)

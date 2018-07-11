@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build",
+  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime -I/usr/local/include/llvm  -std=c++11  -g   -o CMakeFiles/codegen.dir/test.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/test.cpp",
+  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/test.cpp"
+},
+{
+  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Lexer.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp",
+  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp"
+},
+{
+  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Parser.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Parser.cpp",
+  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Parser.cpp"
+}
+]
