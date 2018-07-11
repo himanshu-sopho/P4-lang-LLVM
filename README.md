@@ -8,7 +8,7 @@
 4. This creates an executable in build folder named "codegen".
 
 
-# P4-lang-LLVM
+# P4-lang-LLVM(without CMake)
 
 1. Put all the header files and test.cpp in a project directory .
 2. Build the project .
