@@ -1,3 +1,13 @@
+# Dependencies for CMake :
+1. All antlr and LLVM libraries should be in /usr/local/lib
+2. Also the include files should be present in /usr/local/include/
+# Using CMake :
+1. Go to the source repository.
+2. mkdir build;cd build
+3. cmake ../
+4. This creates an executable in build folder named "codegen".
+
+
 # P4-lang-LLVM
 
 1. Put all the header files and test.cpp in a project directory .
