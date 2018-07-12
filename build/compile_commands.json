@@ -1,37 +1,37 @@
 [
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime -I/usr/local/include/llvm  -std=c++11  -g   -o CMakeFiles/codegen.dir/test.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/test.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/test.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime -I/usr/local/include/llvm  -std=c++11  -g   -o CMakeFiles/codegen.dir/test.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/test.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/test.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416BaseListener.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416BaseListener.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416BaseListener.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416BaseListener.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416BaseListener.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416BaseListener.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416BaseVisitor.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416BaseVisitor.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416BaseVisitor.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416BaseVisitor.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416BaseVisitor.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416BaseVisitor.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Lexer.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Lexer.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Lexer.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Listener.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Listener.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Listener.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Listener.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Listener.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Listener.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Parser.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Parser.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Parser.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Parser.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Parser.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Parser.cpp"
 },
 {
-  "directory": "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles",
-  "command": "/usr/bin/clang++   -I/Users/hishukl2/Desktop/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Visitor.cpp.o -c /Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Visitor.cpp",
-  "file": "/Users/hishukl2/Desktop/P4-lang-LLVM/IncludeFiles/P416Visitor.cpp"
+  "directory": "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles",
+  "command": "/usr/bin/clang++   -I/Users/sakhobra/Documents/P4-lang-LLVM -I/usr/local/include/antlr4-runtime  -std=c++11  -g   -o CMakeFiles/include_file.dir/P416Visitor.cpp.o -c /Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Visitor.cpp",
+  "file": "/Users/sakhobra/Documents/P4-lang-LLVM/IncludeFiles/P416Visitor.cpp"
 }
 ]

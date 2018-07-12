@@ -50,6 +50,43 @@ struct SimpleVariable
 	long long int Value=0;
 };
 
+class variable_info{
+public:
+	string name;
+	int width;
+	int value;
+	bool Signed;
+	string type;
+	multimap <std::string,class variable_info*> children ;
+public:
+	variable_info(string variable_name,string variable_type="",bool if_signed=true,int set_width = -1, int set_value = -1){
+		name = variable_name;
+		value = set_value;
+		Signed = if_signed;
+		width = set_width;
+		type = variable_type;
+	}
+};
+
+std::multimap <std::string,class variable_info* > table;
+std::multimap<std::string, class variable_info * > * table_ptr = &table;
+string curr_type="";
+std::multimap<std::string,class variable_info*>::iterator iter;
+void print_map(multimap<std::string,class variable_info*> m){
+	std::multimap <std::string,class variable_info* >::iterator it;
+	for(it=m.begin();it!=m.end();it++){
+		cout << it->first << " " /*<< it->second->name << " "*/ << it->second->type << " " << it->second->value << " " << it->second->width << " " << it->second->Signed<< "\n" ;
+		std::multimap <std::string,class variable_info* > child_map = it->second->children;
+		if(child_map.begin()==child_map.end()){
+			cout << "no children" << endl;
+		}
+		else{
+			cout << "Children : \n";
+			print_map(child_map);
+		}
+	}
+}
+
 class MyDeclarationVisitor:public P416BaseVisitor
 {
 	public:
@@ -874,7 +911,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 int main()
 {
 	std::ifstream stream;
-	stream.open("/Users/hishukl2/Documents/p4antlr/sample.p4");
+	stream.open("/Users/sakhobra/Desktop/sample.p4");
 
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
