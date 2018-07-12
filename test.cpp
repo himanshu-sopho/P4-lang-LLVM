@@ -21,14 +21,20 @@
 #include <iterator>
 #include <cstdio>
 #include <cstring>
-
+#include <typeindex>
+#include <typeinfo>
 using namespace llvm;
 using namespace std;
 using namespace antlr4;
 
 map <string,struct SimpleVariable> typedefMap;
 map <string, struct SimpleVariable> :: iterator itr;
-
+map <string, int> errorCodeMap;
+map <string, int> matchKindCodeMap;
+map <string, int> enumCodeMap;
+int errorCount=0;
+int enumCount=0;
+int matchKindCount=0;
 
 static LLVMContext context;
 llvm::Module* module = new llvm::Module("top", context);
@@ -52,21 +58,57 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		{
 			string rString = ctx->ERROR()->toString();
 			rString += ctx->LCURL()->toString();
-			rString += visit(ctx->identifierList()).as<string>();
+			vector<string> ilist = visit(ctx->identifierList());
+			//rString += ilist;
 			rString += ctx->RCURL()->toString();
+
+			cout <<endl;
+			for (int i=0;i<ilist.size();i++)
+			{
+				errorCodeMap.insert(pair<string,int>(ilist[i],errorCount++));
+			}
+			for (auto &it : errorCodeMap)
+			{
+				cout << it.first << " " << it.second <<endl;
+			}
+			cout << "--------------------\n";
 			return rString;
+		}
+
+		antlrcpp::Any visitMatchKindDeclaration(P416Parser::MatchKindDeclarationContext *ctx) override 
+		{
+			vector<string> ilist = visit(ctx->identifierList());
+			//rString += ilist;
+			cout <<endl;
+			for (int i=0;i<ilist.size();i++)
+			{
+				matchKindCodeMap.insert(pair<string,int>(ilist[i],matchKindCount++));
+			}
+			cout << "-------matchkindmap-------------\n";	
+			for (auto &it : matchKindCodeMap)
+			{
+				cout << it.first << " " << it.second <<endl;
+			}
+			cout << "--------------------\n";	
+			return nullptr;
 		}
 
 		antlrcpp::Any visitIdentifierList(P416Parser::IdentifierListContext *ctx) override
 		{
 			string rString = visit(ctx->name(0));
+			
 			int vector_size = ctx->COMMA().size();
+			vector <string> MatchErrorEnum ;
+			MatchErrorEnum.push_back(rString);
+
 			for (int i=0;i< vector_size;i++)
 			{
 				rString += ctx->COMMA(i)->toString();
-				rString += visit(ctx->name(i+1)).as<string>();
+				string name = visit(ctx->name(i+1)).as<string>();
+				rString += name;
+				MatchErrorEnum.push_back(name);
 			}
-			return rString;
+			return MatchErrorEnum;
 		}
 
 		antlrcpp::Any visitName(P416Parser::NameContext *ctx) override
@@ -717,7 +759,22 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			rString += ctx->ENUM()->toString();
 			rString += visit(ctx->name()).as<string>();
 			rString += ctx->LCURL()->toString();
-			rString += visit(ctx->identifierList()).as<string>();
+
+			vector<string> ilist = visit(ctx->identifierList());
+			//rString += ilist;
+			rString += ctx->RCURL()->toString();
+
+			cout <<endl;
+			for (int i=0;i<ilist.size();i++)
+			{
+				enumCodeMap.insert(pair<string,int>(ilist[i],enumCount++));
+			}
+			cout << "---enumcodemap--------------------\n";
+			for (auto &it : enumCodeMap)
+			{
+				cout << it.first << " " << it.second <<endl;
+			}
+			cout << "--------------------\n";
 			rString += ctx->RCURL()->toString();
 			return rString;
 		}
