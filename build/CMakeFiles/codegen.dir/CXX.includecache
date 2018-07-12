@@ -71,6 +71,10 @@ cstdio
 -
 cstring
 -
+typeindex
+-
+typeinfo
+-
 
 /usr/local/include/antlr4-runtime/ANTLRErrorListener.h
 RecognitionException.h
