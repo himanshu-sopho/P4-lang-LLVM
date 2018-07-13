@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/Users/sakhobra/Documents/P4-lang-LLVM/test.cpp" "/Users/sakhobra/Documents/P4-lang-LLVM/build/CMakeFiles/codegen.dir/test.cpp.o"
+  "/Users/hishukl2/Desktop/P4-lang-LLVM/test.cpp" "/Users/hishukl2/Desktop/P4-lang-LLVM/build/CMakeFiles/codegen.dir/test.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "Clang")
 
@@ -17,7 +17,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/Users/sakhobra/Documents/P4-lang-LLVM/build/IncludeFiles/CMakeFiles/include_file.dir/DependInfo.cmake"
+  "/Users/hishukl2/Desktop/P4-lang-LLVM/build/IncludeFiles/CMakeFiles/include_file.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.

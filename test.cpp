@@ -649,10 +649,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 };
 
 
-int main()
+int main(int argc,char* argv[])
 {
 	std::ifstream stream;
-	stream.open("/Users/sakhobra/Desktop/sample.p4");
+	stream.open(argv[1]);
 
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
@@ -670,10 +670,6 @@ int main()
 	  llvm::FunctionType::get(builder.getInt32Ty(), argsRef, false);
 	llvm::Constant *putsFunc = module->getOrInsertFunction("puts", putsType);
 	Value *tmp=builder.CreateCall(putsFunc, helloWorld);
-<<<<<<< HEAD
-=======
-
->>>>>>> 930cf79f3798ea3de22b277030adbb2ab673567b
 
 	ANTLRInputStream input(stream);
 	P416Lexer lexer(&input);
