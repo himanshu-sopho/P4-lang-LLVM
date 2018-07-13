@@ -190,15 +190,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 			return visitChildren(ctx);
 		}
-//		antlrcpp::Any visitDerivedTypeDef(P416Parser::DerivedTypeDefContext *ctx) override
-//		{
-//			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->derivedTypeDeclaration()->getText()));
-//			return visitChildren(ctx);
-//		}
 
 		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
 		{
-		//	return visitChildren(ctx);
 			string rString = ctx->getText();
 //			string rString="";
 //			if (ctx->baseType() != nullptr)
@@ -676,6 +670,10 @@ int main()
 	  llvm::FunctionType::get(builder.getInt32Ty(), argsRef, false);
 	llvm::Constant *putsFunc = module->getOrInsertFunction("puts", putsType);
 	Value *tmp=builder.CreateCall(putsFunc, helloWorld);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 930cf79f3798ea3de22b277030adbb2ab673567b
 
 	ANTLRInputStream input(stream);
 	P416Lexer lexer(&input);
