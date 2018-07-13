@@ -337,7 +337,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //		}
 		antlrcpp::Any visitVarBitSizeType(P416Parser::VarBitSizeTypeContext *ctx) override
 		{
-			//cout << "varbitsize"<<endl;
 			struct SimpleVariable a;
 			a.isSigned = true;
 			a.Width = visit(ctx->number()).as<int>();
@@ -346,11 +345,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitTypeName(P416Parser::TypeNameContext *ctx) override
 		{
-			//cout << "dbg2"<<endl;
 			string rString="";
-//			antlrcpp::Any temp = visit(ctx->prefixedType());
-//			if(temp.isNotNull())
-//				rString += temp.as<string>();
 			if (ctx->prefixedType() != nullptr)
 				rString += visit(ctx->prefixedType()).as<string>();
 			return rString;
@@ -410,13 +405,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitInitializer(P416Parser::InitializerContext *ctx) override
 		{
 			int val=-1;
-			//string temp="initializer";
-			//cout << "type of expression : " << endl ;
 			P416Parser::IntegerContext * temp;
 			temp = dynamic_cast<P416Parser::IntegerContext *> (ctx->expression());
 			if(temp!=nullptr){
 				val = visit(ctx->expression()).as<int>();
-				//cout << "Return number from expression : " << val << "\n\n\n\n";
 				return val;
 			}
 			return val;
@@ -424,54 +416,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitInteger(P416Parser::IntegerContext *ctx) override
 		{
-			//cout << "i am going in integer\n\n";
 			return visit(ctx->number()).as<int>();
 		}
 
-
-	/*	antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override
-		{
-			string rString="";
-			if(ctx->decimalNumber() !=nullptr)
-				rString += visit(ctx->decimalNumber()).as<string>();
-			if(ctx->octalNumber() !=nullptr)
-				rString += visit(ctx->octalNumber()).as<string>();
-			if(ctx->binaryNumber() !=nullptr)
-				rString += visit(ctx->binaryNumber()).as<string>();
-			if(ctx->hexNumber() !=nullptr)
-				rString += visit(ctx->hexNumber()).as<string>();
-			if(ctx->realNumber() !=nullptr)
-				rString += visit(ctx->realNumber()).as<string>();
-			return rString;
-		}
-
-		antlrcpp::Any visitHexNumber(P416Parser::HexNumberContext *ctx) override
-		{
-			string rString="";
-			return ctx->Hex_number()->toString();
-		}
-		antlrcpp::Any visitBinaryNumber(P416Parser::BinaryNumberContext *ctx) override
-		{
-			string rString="";
-			return ctx->Binary_number()->toString();
-		}
-		antlrcpp::Any visitRealNumber(P416Parser::RealNumberContext *ctx) override
-		{
-			string rString="";
-			return ctx->Real_number()->toString();
-		}
-		antlrcpp::Any visitOctalNumber(P416Parser::OctalNumberContext *ctx) override
-		{
-			string rString="";
-			return ctx->Octal_number()->toString();
-		}
-		antlrcpp::Any visitDecimalNumber(P416Parser::DecimalNumberContext *ctx) override
-		{
-			string rString="";
-			return ctx->Decimal_number()->toString();
-		} */
-
-		/*sanket*/
 		antlrcpp::Any visitNumber(P416Parser::NumberContext *ctx) override{
 
 			int rString=0;
@@ -490,8 +437,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			else if(ctx->realNumber()!=nullptr){
 				rString=visit(ctx->realNumber()).as<int>();
 			}
-			//cout << "Number" << ":" <<rString << endl;
-			//string temp = "32";
 			return rString;
 		}
 		antlrcpp::Any visitDecimalNumber(P416Parser::DecimalNumberContext *ctx) override{
@@ -502,23 +447,15 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				//cout << "signed" <<endl;
 				sign++;
-				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				//cout << "unsigned" << endl;
 				sign++;
-				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = stoi(rString.substr(sign+2,rString.length()-sign-2));
-			//cout <<"Int value : " << intValue <<endl<<endl;
-			//cout << "DecimalNumber" <<":" <<rString<<endl;
-			//return rString;
 			return intValue;
 		}
 
@@ -530,23 +467,15 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				//cout << "signed" <<endl;
 				sign++;
-				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				//cout << "unsigned" << endl;
 				sign++;
-				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,8);
-			//cout <<"Int value : " << intValue <<endl<<endl;
-			//cout << "OctalNumber" <<":" <<rString<<endl;
-			//return rString;
 			return intValue;
 		}
 
@@ -558,23 +487,15 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				//cout << "signed" <<endl;
 				sign++;
-				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				//cout << "unsigned" << endl;
 				sign++;
-				//sign = 2;
 			}
 			else{
 				sign = 0;
 			}
-			//cout << "rString length : " << rString.length() <<" " << rString<< endl;
 			int intValue = std::stoi(rString.substr(sign+2,rString.length()-sign-2),0,2);
-			//cout <<"Int value : " << intValue <<endl<<endl;
-			//cout << "BinaryNumber" <<":" <<rString<<endl;
-			//return rString;
 			return intValue;
 		}
 
@@ -586,14 +507,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			int sign = 0;
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			if(rString[sign]=='s' ){
-				//cout << "signed" <<endl;
 				sign++;
-				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				//cout << "unsigned" << endl;
 				sign++;
-				//sign = 2;
 			}
 			else{
 				sign = 0;
@@ -615,14 +532,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			while(rString[sign]!='s' && rString [sign]!='w' && rString [sign] != '\0' )sign++;
 			//cout << "Sign value : char_sign " << sign << " : " << rString[sign] << endl;
 			if(rString[sign]=='s' ){
-				//cout << "signed" <<endl;
 				sign++;
-				//sign = 2;
 			}
 			else if(rString[sign]=='w'){
-				//cout << "unsigned" << endl;
 				sign++;
-				//sign = 2;
 			}
 			else{
 				sign = 0;
