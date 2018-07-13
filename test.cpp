@@ -96,7 +96,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			string rString = ctx->ERROR()->toString();
 			rString += ctx->LCURL()->toString();
 			vector<string> ilist = visit(ctx->identifierList());
-			//rString += ilist;
 			rString += ctx->RCURL()->toString();
 
 			cout <<endl;
@@ -115,7 +114,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitMatchKindDeclaration(P416Parser::MatchKindDeclarationContext *ctx) override 
 		{
 			vector<string> ilist = visit(ctx->identifierList());
-			//rString += ilist;
 			cout <<endl;
 			for (int i=0;i<ilist.size();i++)
 			{
@@ -200,15 +198,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 			return visitChildren(ctx);
 		}
-//		antlrcpp::Any visitDerivedTypeDef(P416Parser::DerivedTypeDefContext *ctx) override
-//		{
-//			typedefMap.insert(pair <string, string> (ctx->name()->getText(),ctx->derivedTypeDeclaration()->getText()));
-//			return visitChildren(ctx);
-//		}
 
 		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
 		{
-		//	return visitChildren(ctx);
 			string rString = ctx->getText();
 //			string rString="";
 //			if (ctx->baseType() != nullptr)
@@ -842,8 +834,6 @@ int main()
 	  llvm::FunctionType::get(builder.getInt32Ty(), argsRef, false);
 	llvm::Constant *putsFunc = module->getOrInsertFunction("puts", putsType);
 	Value *tmp=builder.CreateCall(putsFunc, helloWorld);
-//	builder.CreateAlloca(Type::getInt32Ty(context),nullptr,"foo");
-//
 
 
 	ANTLRInputStream input(stream);
