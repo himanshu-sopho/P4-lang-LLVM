@@ -31,7 +31,7 @@ map <string,struct SimpleVariable> typedefMap;
 map <string, struct SimpleVariable> :: iterator itr;
 map <string, int> errorCodeMap;
 map <string, int> matchKindCodeMap;
-map <string, int> enumCodeMap;
+map <string, map <string, int> >enumCodeMap;
 int errorCount=0;
 int enumCount=0;
 int matchKindCount=0;
@@ -39,7 +39,7 @@ int matchKindCount=0;
 static LLVMContext context;
 llvm::Module* module = new llvm::Module("top", context);
 llvm::IRBuilder<> builder(context);
-llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+
 
 struct SimpleVariable
 {
@@ -570,26 +570,33 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		}
 		antlrcpp::Any visitEnumDeclaration(P416Parser::EnumDeclarationContext *ctx) override
 		{
+			enumCount = 0;
 			string rString = "";
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			rString += ctx->ENUM()->toString();
-			rString += visit(ctx->name()).as<string>();
+			string enumName = visit(ctx->name()).as<string>();
+			rString += enumName;
 			rString += ctx->LCURL()->toString();
 
 			vector<string> ilist = visit(ctx->identifierList());
 			rString += ctx->RCURL()->toString();
 
 			cout <<endl;
+			map<string,int> tempMap;
 			for (int i=0;i<ilist.size();i++)
 			{
-				enumCodeMap.insert(pair<string,int>(ilist[i],enumCount++));
+				tempMap.insert(pair<string,int>(ilist[i],enumCount++));
 			}
+			enumCodeMap.insert(pair<string, map<string,int>>(enumName,tempMap));
+
 			cout << "---enumcodemap--------------------\n";
 			for (auto &it : enumCodeMap)
 			{
-				cout << it.first << " " << it.second <<endl;
+				cout << it.first <<endl; 
+				for (auto &it2: it.second)
+					cout << it2.first << " " << it2.second <<endl;
 			}
 			cout << "--------------------\n";
 			rString += ctx->RCURL()->toString();
@@ -653,10 +660,20 @@ int main(int argc,char* argv[])
 {
 	std::ifstream stream;
 	stream.open(argv[1]);
+	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+
+	llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
+	llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
+	std::vector<llvm::Type *> elements;
+	elements.push_back(pstructType);
+	elements.push_back(llvm::Type::getInt8Ty(context));
+	elements.push_back(llvm::Type::getInt8Ty(context));
+	structType->setBody(elements);
+	errs() << "hi\n\n\n\n\n" <<*structType ;
+	module->getOrInsertGlobal("hey", structType);
 
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
-
 	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label1", mainFunc);
 	builder.SetInsertPoint(entry);
 
