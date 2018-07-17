@@ -32,11 +32,9 @@ map <string, struct SimpleVariable> :: iterator itr;
 map <string, int> errorCodeMap;
 map <string, int> matchKindCodeMap;
 map <string, map <string, int> >enumCodeMap;
-map <string,struct SimpleVariable> structMap; 
 int errorCount=0;
 int enumCount=0;
 int matchKindCount=0;
-int var_count = 0;
 
 static LLVMContext context;
 llvm::Module* module = new llvm::Module("top", context);
@@ -70,6 +68,11 @@ public:
 	}
 };
 
+struct parameterlist_and_control_name{
+	string control_name;
+	vector<map<string,struct SimpleVariable>>parameterlist;
+};
+
 std::multimap <std::string,class variable_info* > table;
 std::multimap<std::string, class variable_info * > * table_ptr = &table;
 string curr_type="";
@@ -92,33 +95,6 @@ void print_map(multimap<std::string,class variable_info*> m){
 class MyDeclarationVisitor:public P416BaseVisitor
 {
 	public:
-
-		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override {
-			string rString;
-			vector<llvm::Type *> mem_list;
-			// llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
-			// llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			// std::vector<llvm::Type *> elements;
-			//elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// structType->setBody(elements);
-	// 		errs() << "hi\n\n\n\n\n" <<*structType ;
-	// module->getOrInsertGlobal("hey", structType);
-			int n = ctx->structField().size();
-			for(int i=0;i<n;i++){
-				struct SimpleVariable struct_var = visit(ctx->structField(i)).as<struct SimpleVariable>();
-				mem_list.push_back(llvm::Type::getIntNTy(context,struct_var.Width));
-			}
-			// structType->setBody(elements);
-			// var_count++;
-			// string add_name = to_string(var_count);
-			// string struct_base = "struct_";
-			// string new_name = struct_base+add_name;
-			//module->getOrInsertGlobal(new_name, structType);
-			//cout << "StructfieldList" << ":" <<rString<<endl;
-			return mem_list;
-		}
 
 		antlrcpp::Any visitErrorDeclaration(P416Parser::ErrorDeclarationContext *ctx) override
 		{
@@ -553,95 +529,47 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		}
 		antlrcpp::Any visitHeaderTypeDeclaration(P416Parser::HeaderTypeDeclarationContext *ctx) override
 		{
-			string rString = "";
-			vector <llvm::Type*> mem_list;
+			string rString  = "";
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			rString += ctx->HEADER()->toString();
-			//rString += visit(ctx->name()).as<string>();
-			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
+			if (ctx->name() != nullptr)
+				rString += visit(ctx->name()).as<string>();
 			rString += ctx->LCURL()->toString();
-			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
-
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
-			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			std::vector<llvm::Type *> elements;
-			// elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
-			var_count++;
-			string add_name = to_string(var_count);
-			string struct_base = "struct_";
-			string new_name = struct_base+add_name;
-			module->getOrInsertGlobal(new_name, structType);
-			cout << "StructfieldList" << ":" <<rString<<endl;
+			if (ctx->structFieldList() != nullptr )
+				rString += visit(ctx->structFieldList()).as<string>();
 			rString += ctx->RCURL()->toString();
-			return rString;
+
+			return ctx->getText();
 		}
 		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
 		{
 			string rString = "";
-			vector <llvm::Type*> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			rString += ctx->HEADER_UNION()->toString();
-			
-			//rString += visit(ctx->name()).as<string>();
-			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
+			rString += visit(ctx->name()).as<string>();
 			rString += ctx->LCURL()->toString();
 			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
-
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
-			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			std::vector<llvm::Type *> elements;
-			// elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
-			var_count++;
-			string add_name = to_string(var_count);
-			string struct_base = "struct_";
-			string new_name = struct_base+add_name;
-			module->getOrInsertGlobal(new_name, structType);
-			cout << "StructfieldList" << ":" <<rString<<endl;
+				rString += visit(ctx->structFieldList()).as<string>();
 			rString += ctx->RCURL()->toString();
+
+
 			return rString;
 		}
 		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
 		{
 			string rString = "";
-			vector <llvm::Type*> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			rString += ctx->STRUCT()->toString();
-			//rString += visit(ctx->name()).as<string>();
-			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
+			rString += visit(ctx->name()).as<string>();
 			rString += ctx->LCURL()->toString();
 			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
-
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
-			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			std::vector<llvm::Type *> elements;
-			// elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
-			var_count++;
-			string add_name = to_string(var_count);
-			string struct_base = "struct_";
-			string new_name = struct_base+add_name;
-			module->getOrInsertGlobal(new_name, structType);
-			//cout << "StructfieldList" << ":" <<rString<<endl;
+				rString += visit(ctx->structFieldList()).as<string>();
 			rString += ctx->RCURL()->toString();
 			return rString;
 		}
@@ -679,31 +607,34 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			rString += ctx->RCURL()->toString();
 			return rString;
 		}
-		
-		
+		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override
+		{
+			string rString = visit(ctx->structField(0)).as<string>();
+			for (int i=1,len=ctx->structField().size();i<len;i++)
+			{
+				rString += visit(ctx->structField(i)).as<string>();
+			}
+			return rString;
+		}
 
 		antlrcpp::Any visitStructField(P416Parser::StructFieldContext *ctx) override
 		{
-			/*bit<4> var; ipv4 var; */
 			string rString  = "";
-			struct SimpleVariable typeRefStr;
-						//rString += typeRefString ;
-			string name = visit(ctx->name()).as<string>();
-			rString += name;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
-				rString +=visit(ctx->optAnnotations()).as<string>(); 
+				rString +=visit(ctx->optAnnotations()).as<string>();
 			string typeRefString = ctx->typeRef()->getText();
+			rString += typeRefString ;
+			string name = visit(ctx->name()).as<string>();
+			rString += name;
 			if (typedefMap.find(typeRefString) == typedefMap.end() )
-				typeRefStr = visit(ctx->typeRef()).as<struct SimpleVariable>();
-
-			
+				;
 			else
 			{
 				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
-				return actualType;
+				Value *tmp = builder.CreateAlloca(Type::getIntNTy(context,actualType.Width),nullptr,name);
 			}
-			return typeRefStr;
+			return rString;
 		}
 		antlrcpp::Any visitVariableDeclaration(P416Parser::VariableDeclarationContext *ctx) override
 		{
@@ -727,6 +658,72 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 			return rString;
 		}
+
+		antlrcpp::Any visitParameter(P416Parser::ParameterContext *ctx) override
+		{
+			/*ignoring the case of direction for now*/
+			// in case where typeref is not a basetype but a typedef type declared to be base type
+			string typeRefString  = ctx->typeRef()->getText();
+
+			if (typedefMap.find(typeRefString) != typedefMap.end() )
+			{
+				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+				cout << "\ntemp width : \n"<<actualType.Width<<endl ;
+				return actualType;
+			}
+			else
+			{
+				auto temp = visit(ctx->typeRef()).as<struct SimpleVariable>();
+				cout << "\ntemp width : \n"<<temp.Width<<endl ;
+				return temp;
+			}
+			return ctx->getText();
+		}	
+		antlrcpp::Any visitParameterList(P416Parser::ParameterListContext *ctx) override
+		{
+			vector<struct SimpleVariable> paralist;
+			
+			for(int i=0,len=ctx->parameter().size();i<len;i++)
+			{
+				auto temp = visit(ctx->parameter(i)).as<struct SimpleVariable>();
+				paralist.push_back(temp);
+			}
+			return paralist;	
+		}
+
+		antlrcpp::Any visitControlTypeDeclaration(P416Parser::ControlTypeDeclarationContext *ctx) override
+		{
+			//string controlname = visit(ctx->name()).as<string>();
+			vector<struct SimpleVariable> paralist = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+			return paralist;
+		}
+
+		antlrcpp::Any visitControlDeclaration(P416Parser::ControlDeclarationContext *ctx) override
+		{
+			string rString = "";
+			vector<struct SimpleVariable> paralist = visit(ctx->controlTypeDeclaration()).as<vector<struct SimpleVariable>>();
+			for (int i=0,len=paralist.size();i<len;i++)
+				cout << "\nwidth : \n" << paralist[i].Width ;
+			visit(ctx->controlLocalDeclarations());	
+			return nullptr;
+		}				  
+
+		antlrcpp::Any visitActionDeclaration(P416Parser::ActionDeclarationContext *ctx) override
+		{
+			vector<struct SimpleVariable> paralist  = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+			for (int i=0,len=paralist.size();i<len;i++)
+				cout << "\nwidth : \n" << paralist[i].Width ;
+							
+			llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+			
+			llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "action", module);
+			
+			llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
+			
+			//builder.SetInsertPoint(entry);
+			cout << "\nhello\n";
+			return ctx->getText();
+		}	  
 };
 
 
@@ -734,7 +731,6 @@ int main(int argc,char* argv[])
 {
 	std::ifstream stream;
 	stream.open(argv[1]);
-	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 
 	llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
 	llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
@@ -746,6 +742,7 @@ int main(int argc,char* argv[])
 	errs() << "hi\n\n\n\n\n" <<*structType ;
 	module->getOrInsertGlobal("hey", structType);
 
+	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
 	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label1", mainFunc);
@@ -770,6 +767,7 @@ int main(int argc,char* argv[])
 	MyDeclarationVisitor visitor;
 	visitor.visit(tree);
 	builder.CreateRet(tmp);
+
 	module->dump();
 	return 0;
 }
