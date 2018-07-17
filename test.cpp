@@ -68,6 +68,11 @@ public:
 	}
 };
 
+struct parameterlist_and_control_name{
+	string control_name;
+	vector<map<string,struct SimpleVariable>>parameterlist;
+};
+
 std::multimap <std::string,class variable_info* > table;
 std::multimap<std::string, class variable_info * > * table_ptr = &table;
 string curr_type="";
@@ -653,6 +658,72 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 			return rString;
 		}
+
+		antlrcpp::Any visitParameter(P416Parser::ParameterContext *ctx) override
+		{
+			/*ignoring the case of direction for now*/
+			// in case where typeref is not a basetype but a typedef type declared to be base type
+			string typeRefString  = ctx->typeRef()->getText();
+
+			if (typedefMap.find(typeRefString) != typedefMap.end() )
+			{
+				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+				cout << "\ntemp width : \n"<<actualType.Width<<endl ;
+				return actualType;
+			}
+			else
+			{
+				auto temp = visit(ctx->typeRef()).as<struct SimpleVariable>();
+				cout << "\ntemp width : \n"<<temp.Width<<endl ;
+				return temp;
+			}
+			return ctx->getText();
+		}	
+		antlrcpp::Any visitParameterList(P416Parser::ParameterListContext *ctx) override
+		{
+			vector<struct SimpleVariable> paralist;
+			
+			for(int i=0,len=ctx->parameter().size();i<len;i++)
+			{
+				auto temp = visit(ctx->parameter(i)).as<struct SimpleVariable>();
+				paralist.push_back(temp);
+			}
+			return paralist;	
+		}
+
+		antlrcpp::Any visitControlTypeDeclaration(P416Parser::ControlTypeDeclarationContext *ctx) override
+		{
+			//string controlname = visit(ctx->name()).as<string>();
+			vector<struct SimpleVariable> paralist = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+			return paralist;
+		}
+
+		antlrcpp::Any visitControlDeclaration(P416Parser::ControlDeclarationContext *ctx) override
+		{
+			string rString = "";
+			vector<struct SimpleVariable> paralist = visit(ctx->controlTypeDeclaration()).as<vector<struct SimpleVariable>>();
+			for (int i=0,len=paralist.size();i<len;i++)
+				cout << "\nwidth : \n" << paralist[i].Width ;
+			visit(ctx->controlLocalDeclarations());	
+			return nullptr;
+		}				  
+
+		antlrcpp::Any visitActionDeclaration(P416Parser::ActionDeclarationContext *ctx) override
+		{
+			vector<struct SimpleVariable> paralist  = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+			for (int i=0,len=paralist.size();i<len;i++)
+				cout << "\nwidth : \n" << paralist[i].Width ;
+							
+			llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
+			
+			llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "action", module);
+			
+			llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
+			
+			//builder.SetInsertPoint(entry);
+			cout << "\nhello\n";
+			return ctx->getText();
+		}	  
 };
 
 
@@ -660,7 +731,6 @@ int main(int argc,char* argv[])
 {
 	std::ifstream stream;
 	stream.open(argv[1]);
-	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 
 	llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
 	llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
@@ -672,6 +742,7 @@ int main(int argc,char* argv[])
 	errs() << "hi\n\n\n\n\n" <<*structType ;
 	module->getOrInsertGlobal("hey", structType);
 
+	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 	llvm::Function *mainFunc =
 	  llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
 	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label1", mainFunc);
@@ -696,6 +767,7 @@ int main(int argc,char* argv[])
 	MyDeclarationVisitor visitor;
 	visitor.visit(tree);
 	builder.CreateRet(tmp);
+
 	module->dump();
 	return 0;
 }
