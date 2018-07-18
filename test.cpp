@@ -532,7 +532,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitHeaderTypeDeclaration(P416Parser::HeaderTypeDeclarationContext *ctx) override
 		{
 			string rString = "";
-			cout << "visitHeaderTypeDeclaration" << endl;
 			vector <llvm::Type*> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
@@ -564,7 +563,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
 		{
 			string rString = "";
-			cout << "visitHeaderUnionDeclaration" <<endl;
 			vector <llvm::Type*> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
@@ -597,7 +595,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
 		{
 			string rString = "";
-			cout << "visitStructTypeDeclaration" << endl;
 			vector <llvm::Type*> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
@@ -662,7 +659,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		}
 		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override {
 			string rString;
-			cout << "visitStructFieldList" << endl;
 			vector<llvm::Type *> mem_list;
 			// llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
 			// llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
@@ -694,7 +690,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		{
 			/*bit<4> var; ipv4 var; */
 			string rString  = "";
-			cout << "visitStructField" <<endl;
 			struct SimpleVariable typeRefStr;
 						//rString += typeRefString ;
 			string name = visit(ctx->name()).as<string>();
@@ -849,5 +844,4 @@ int main(int argc,char* argv[])
 	module->dump();
 	return 0;
 }
-
 
