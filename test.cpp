@@ -33,7 +33,7 @@ map <string, int> errorCodeMap;
 map <string, int> matchKindCodeMap;
 map <string, llvm::PointerType*> controlPointerMap;
 map <string, map <string, int> >enumCodeMap;
-map <string,struct SimpleVariable> structMap; 
+map <string, vector<struct SimpleVariable>> structMap; 
 int errorCount=0;
 int enumCount=0;
 int matchKindCount=0;
@@ -46,6 +46,7 @@ llvm::IRBuilder<> builder(context);
 
 struct SimpleVariable
 {
+	string name;
 	bool isSigned=0;
 	bool isBool = 0;
 	bool isError = 0;
@@ -98,34 +99,6 @@ void print_map(multimap<std::string,class variable_info*> m){
 class MyDeclarationVisitor:public P416BaseVisitor
 {
 	public:
-
-		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override {
-			string rString;
-			vector<llvm::Type *> mem_list;
-			// llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
-			// llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			// std::vector<llvm::Type *> elements;
-			//elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// structType->setBody(elements);
-	// 		errs() << "hi\n\n\n\n\n" <<*structType ;
-	// module->getOrInsertGlobal("hey", structType);
-			int n = ctx->structField().size();
-			for(int i=0;i<n;i++){
-				struct SimpleVariable struct_var = visit(ctx->structField(i)).as<struct SimpleVariable>();
-				if(struct_var.Width > 0)
-					mem_list.push_back(llvm::Type::getIntNTy(context,struct_var.Width));
-			}
-			// structType->setBody(elements);
-			// var_count++;
-			// string add_name = to_string(var_count);
-			// string struct_base = "struct_";
-			// string new_name = struct_base+add_name;
-			//module->getOrInsertGlobal(new_name, structType);
-			//cout << "StructfieldList" << ":" <<rString<<endl;
-			return mem_list;
-		}
 
 		antlrcpp::Any visitErrorDeclaration(P416Parser::ErrorDeclarationContext *ctx) override
 		{
@@ -571,88 +544,30 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitHeaderTypeDeclaration(P416Parser::HeaderTypeDeclarationContext *ctx) override
 		{
 			string rString = "";
-			vector <llvm::Type*> mem_list;
+			vector <struct SimpleVariable> mem_list;
 			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
 			else
 				rString +=visit(ctx->optAnnotations()).as<string>();
 			rString += ctx->HEADER()->toString();
 			//rString += visit(ctx->name()).as<string>();
 			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
+			string struct_header_name = rString+"."+struct_name;
+			//structMap.insert(pair<string,struct SimpleVariable>(struct_name,))
 			rString += ctx->LCURL()->toString();
 			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
+				mem_list = visit(ctx->structFieldList()).as<vector<struct SimpleVariable>>();
 
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
+			structMap.insert(pair<std::string,vector<struct SimpleVariable>>(struct_name,mem_list));
+			llvm::StructType *structType = llvm::StructType::create(context, struct_header_name);
 			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
 			std::vector<llvm::Type *> elements;
+			for(int i=0;i<mem_list.size();i++){
+				elements.push_back(llvm::Type::getIntNTy(context,mem_list[i].Width));
+			}
 			// elements.push_back(pstructType);
 			// elements.push_back(llvm::Type::getInt8Ty(context));
 			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
-			var_count++;
-			string add_name = to_string(var_count);
-			string struct_base = "struct_";
-			string new_name = struct_base+add_name;
-			module->getOrInsertGlobal(new_name, structType);
-			cout << "StructfieldList" << ":" <<rString<<endl;
-			rString += ctx->RCURL()->toString();
-			return rString;
-		}
-		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
-		{
-			string rString = "";
-			vector <llvm::Type*> mem_list;
-			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
-			else
-				rString +=visit(ctx->optAnnotations()).as<string>();
-			rString += ctx->HEADER_UNION()->toString();
-			
-			//rString += visit(ctx->name()).as<string>();
-			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
-			rString += ctx->LCURL()->toString();
-			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
-
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
-			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			std::vector<llvm::Type *> elements;
-			// elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
-			var_count++;
-			string add_name = to_string(var_count);
-			string struct_base = "struct_";
-			string new_name = struct_base+add_name;
-			module->getOrInsertGlobal(new_name, structType);
-			cout << "StructfieldList" << ":" <<rString<<endl;
-			rString += ctx->RCURL()->toString();
-			return rString;
-		}
-		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
-		{
-			string rString = "";
-			vector <llvm::Type*> mem_list;
-			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
-			else
-				rString +=visit(ctx->optAnnotations()).as<string>();
-			rString += ctx->STRUCT()->toString();
-			//rString += visit(ctx->name()).as<string>();
-			string struct_name = visit(ctx->name()).as<string>();
-			struct_name = rString+"."+struct_name;
-			rString += ctx->LCURL()->toString();
-			if (ctx->structFieldList() != nullptr)
-				mem_list = visit(ctx->structFieldList()).as<vector<llvm::Type*>>();
-
-			llvm::StructType *structType = llvm::StructType::create(context, struct_name);
-			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-			std::vector<llvm::Type *> elements;
-			// elements.push_back(pstructType);
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			// elements.push_back(llvm::Type::getInt8Ty(context));
-			structType->setBody(mem_list);
+			structType->setBody(elements);
 			var_count++;
 			string add_name = to_string(var_count);
 			string struct_base = "struct_";
@@ -661,6 +576,110 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			//cout << "StructfieldList" << ":" <<rString<<endl;
 			rString += ctx->RCURL()->toString();
 			return rString;
+		}
+		antlrcpp::Any visitHeaderUnionDeclaration(P416Parser::HeaderUnionDeclarationContext *ctx) override
+		{
+			string rString = "";
+			vector <struct SimpleVariable> mem_list;
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->HEADER_UNION()->toString();
+			//rString += visit(ctx->name()).as<string>();
+			string struct_name = visit(ctx->name()).as<string>();
+			string struct_header_name = rString+"."+struct_name;
+			//structMap.insert(pair<string,struct SimpleVariable>(struct_name,))
+			rString += ctx->LCURL()->toString();
+			if (ctx->structFieldList() != nullptr)
+				mem_list = visit(ctx->structFieldList()).as<vector<struct SimpleVariable>>();
+
+			structMap.insert(pair<std::string,vector<struct SimpleVariable>>(struct_name,mem_list));
+			llvm::StructType *structType = llvm::StructType::create(context, struct_header_name);
+			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
+			std::vector<llvm::Type *> elements;
+			for(int i=0;i<mem_list.size();i++){
+				elements.push_back(llvm::Type::getIntNTy(context,mem_list[i].Width));
+			}
+			// elements.push_back(pstructType);
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			structType->setBody(elements);
+			var_count++;
+			string add_name = to_string(var_count);
+			string struct_base = "struct_";
+			string new_name = struct_base+add_name;
+			module->getOrInsertGlobal(new_name, structType);
+			//cout << "StructfieldList" << ":" <<rString<<endl;
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+		antlrcpp::Any visitStructTypeDeclaration(P416Parser::StructTypeDeclarationContext *ctx) override
+		{
+			string rString = "";
+			vector <struct SimpleVariable> mem_list;
+			if (ctx->optAnnotations()==nullptr || ctx->optAnnotations()->isEmpty());
+			else
+				rString +=visit(ctx->optAnnotations()).as<string>();
+			rString += ctx->STRUCT()->toString();
+			//rString += visit(ctx->name()).as<string>();
+			string struct_name = visit(ctx->name()).as<string>();
+			string struct_header_name = rString+"."+struct_name;
+			//structMap.insert(pair<string,struct SimpleVariable>(struct_name,))
+			rString += ctx->LCURL()->toString();
+			if (ctx->structFieldList() != nullptr)
+				mem_list = visit(ctx->structFieldList()).as<vector<struct SimpleVariable>>();
+
+			structMap.insert(pair<std::string,vector<struct SimpleVariable>>(struct_name,mem_list));
+			llvm::StructType *structType = llvm::StructType::create(context, struct_header_name);
+			llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
+			std::vector<llvm::Type *> elements;
+			for(int i=0;i<mem_list.size();i++){
+				elements.push_back(llvm::Type::getIntNTy(context,mem_list[i].Width));
+			}
+			// elements.push_back(pstructType);
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			structType->setBody(elements);
+			var_count++;
+			string add_name = to_string(var_count);
+			string struct_base = "struct_";
+			string new_name = struct_base+add_name;
+			module->getOrInsertGlobal(new_name, structType);
+			//cout << "StructfieldList" << ":" <<rString<<endl;
+			rString += ctx->RCURL()->toString();
+			return rString;
+		}
+
+		antlrcpp::Any visitStructFieldList(P416Parser::StructFieldListContext *ctx) override {
+			string rString;
+			vector<llvm::Type *> mem_list;
+			vector<struct SimpleVariable> mem_var_list;
+			// llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
+			// llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
+			// std::vector<llvm::Type *> elements;
+			//elements.push_back(pstructType);
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			// elements.push_back(llvm::Type::getInt8Ty(context));
+			// structType->setBody(elements);
+	// 		errs() << "hi\n\n\n\n\n" <<*structType ;
+	// module->getOrInsertGlobal("hey", structType);
+			int n = ctx->structField().size();
+			for(int i=0;i<n;i++){
+				struct SimpleVariable struct_var = visit(ctx->structField(i)).as<struct SimpleVariable>();
+				if(struct_var.Width > 0){
+					mem_list.push_back(llvm::Type::getIntNTy(context,struct_var.Width));
+					mem_var_list.push_back(struct_var);
+				}
+
+			}
+			// structType->setBody(elements);
+			// var_count++;
+			// string add_name = to_string(var_count);
+			// string struct_base = "struct_";
+			// string new_name = struct_base+add_name;
+			//module->getOrInsertGlobal(new_name, structType);
+			//cout << "StructfieldList" << ":" <<rString<<endl;
+			return mem_var_list;
 		}
 		antlrcpp::Any visitEnumDeclaration(P416Parser::EnumDeclarationContext *ctx) override
 		{
@@ -715,8 +734,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			else
 			{
 				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+				actualType.name = name;
 				return actualType;
 			}
+			typeRefStr.name = name;
 			return typeRefStr;
 		}
 		antlrcpp::Any visitVariableDeclaration(P416Parser::VariableDeclarationContext *ctx) override
@@ -905,7 +926,432 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
 				return nullptr;
 			}
-		}	  
+		}
+
+		/*antlrcpp::Any visitTrue(P416Parser::TrueContext *ctx) override{
+			string rString;
+			rString += ctx->TRUE()->toString();
+			//cout << "True" <<":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitFalse(P416Parser::FalseContext *ctx) override{
+			string rString;
+			rString += ctx->FALSE()->toString();
+			//cout << "False" <<":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitString(P416Parser::StringContext *ctx) override{
+			string rString;
+			rString += ctx->STRING_LITERAL()->toString();
+			//cout << "String" <<":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitNonType(P416Parser::NonTypeContext *ctx) override{
+			string rString;
+			rString += visit(ctx->nonTypeName()).as<string>();
+			//cout << "NonType" <<":" << rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitPrefixedNonType(P416Parser::PrefixedNonTypeContext *ctx) override{
+			string rString;
+			rString += ctx->DOT()->toString();
+			rString += visit(ctx->nonTypeName()).as<string>();
+			//cout << "PrefixedNonType" <<":" << rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitFunctionCall(P416Parser::FunctionCallContext *ctx) override{
+			//expression LPARAN argumentList? RPARAN
+
+			string rString;
+			rString += visit(ctx->expression()).as<string>();
+			rString += ctx->LPARAN()->toString();
+			rString += (ctx->argumentList()!=nullptr)? visit(ctx->argumentList()).as<string>() : "";
+			rString += ctx->RPARAN()->toString();
+			//cout << "FunctionCall" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitTempletizedFunctionCall(P416Parser::TempletizedFunctionCallContext *ctx) override{
+			//expression LT typeArgumentList GT LPARAN argumentList? RPARAN
+
+			string rString;
+			rString += visit(ctx->expression()).as<string>();
+			rString += ctx->LT()->toString();
+			rString += visit(ctx->typeArgumentList()).as<string>();
+			rString += ctx->GT()->toString();
+			rString += ctx->LPARAN()->toString();
+			rString += (ctx->argumentList()!=nullptr)? visit(ctx->argumentList()).as<string>() : "";
+			rString += ctx->RPARAN()->toString();
+			//cout << "TempletizedFunctionCall" << ":" << rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitConstructor(P416Parser::ConstructorContext *ctx) override{
+			//typeRef LPARAN argumentList? RPARAN
+
+			string rString;
+			rString += visit(ctx->typeRef()).as<string>();
+			rString += ctx->LPARAN()->toString();
+			rString += (ctx->argumentList()!=nullptr)? visit(ctx->argumentList()).as<string>() : "";
+			rString += ctx->RPARAN()->toString();
+			//cout << "Constructor" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitCast(P416Parser::CastContext *ctx) override{
+			//LPARAN typeRef RPARAN expression
+
+			string rString;
+			rString += ctx->LPARAN()->toString();
+			rString += visit(ctx->typeRef()).as<string>();
+			rString += ctx->RPARAN()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			//cout << "Cast" << ":" << rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitArrayIndex(P416Parser::ArrayIndexContext *ctx) override{
+			//expression LBRKT expression RBRKT
+
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LBRKT()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			rString += ctx->RBRKT()->toString();
+			//cout << "ArrayIndex" << ":" <<rString << endl;
+			return rString;
+
+		}
+
+		antlrcpp::Any visitRangeIndex(P416Parser::RangeIndexContext *ctx) override{
+			//expression LBRKT expression COLON expression RBRKT
+
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LBRKT()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			rString += ctx->COLON()->toString();
+			rString += visit(ctx->expression(2)).as<string>();
+			rString += ctx->RBRKT()->toString();
+			//cout << "RangeIndex" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitSet(P416Parser::SetContext *ctx) override{
+			//LCURL expressionList? RCURL
+
+			string rString;
+			rString += ctx->LCURL()->toString();
+			rString += (ctx->expressionList()!=nullptr)? visit(ctx->expressionList()).as<string>() : "";
+			rString += ctx->RCURL()->toString();
+			//cout << "Set" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitOf(P416Parser::OfContext *ctx) override{
+			//LPARAN expression RPARAN
+
+			string rString;
+			rString += ctx->LPARAN()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			rString += ctx->RPARAN()->toString();
+			//cout << "Of" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitNot(P416Parser::NotContext *ctx) override{
+			string rString;
+			rString += visit(ctx->unaryExpression_not()).as<string>();
+			//cout << "Not" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitNegate(P416Parser::NegateContext *ctx) override{
+			string rString;
+			rString += visit(ctx->unaryExpression_tilda()).as<string>();
+			//cout << "Negate" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryMinus(P416Parser::UnaryMinusContext *ctx) override{
+			string rString;
+			rString += visit(ctx->unaryExpression_minus()).as<string>();
+			//cout << "UnaryMinus" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryPlus(P416Parser::UnaryPlusContext *ctx) override{
+			string rString;
+			rString += visit(ctx->unaryExpression_plus()).as<string>();
+			//cout << "UnaryPlus" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitMemberAccess(P416Parser::MemberAccessContext *ctx) override{
+			//typeName DOT member
+
+			string rString;
+			rString += visit(ctx->typeName()).as<string>();
+			rString += ctx->DOT()->toString();
+			rString += visit(ctx->member()).as<string>();
+			//cout << "MemberAccess" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitErrorMemberAccess(P416Parser::ErrorMemberAccessContext *ctx) override{
+
+			string rString;
+			rString += ctx->ERROR()->toString();
+			rString += ctx->DOT()->toString();
+			rString += visit(ctx->member()).as<string>();
+			//cout << "ErrorMemberAccess" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitExprMemberAccess(P416Parser::ExprMemberAccessContext *ctx) override{
+
+			string rString;
+			rString += visit(ctx->expression()).as<string>();
+			rString += ctx->DOT()->toString();
+			rString += visit(ctx->member()).as<string>();
+			//cout << "ExprMemberAccess" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitStar(P416Parser::StarContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->STAR()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Star" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitSlah(P416Parser::SlahContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->SLASH()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Star" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitMod(P416Parser::ModContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->PRCNT()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Star" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitPlus(P416Parser::PlusContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->PLUS()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Star" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitMinus(P416Parser::MinusContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->MINUS()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Star" << ":" <<rString << endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitShiftLeft(P416Parser::ShiftLeftContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->SHL()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "ShiftLeft" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitShifRight(P416Parser::ShifRightContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->GT(0)->toString();
+			rString += ctx->GT(1)->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "ShiftLeft" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitBitAnd(P416Parser::BitAndContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->AND()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "BitAnd" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitBitXor(P416Parser::BitXorContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->XOR()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "BitXor" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitBitOr(P416Parser::BitOrContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->OR()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "BitOr" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitPlusPlus(P416Parser::PlusPlusContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->PP()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "PlusPlus" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitLessThanOrEqual(P416Parser::LessThanOrEqualContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LE()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "LessThanOrEqual" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitGreaterThanOrEqual(P416Parser::GreaterThanOrEqualContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->GE()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "GreaterThanOrEqual" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitLessThan(P416Parser::LessThanContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LT()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "LessThan" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitGreaterThan(P416Parser::GreaterThanContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->GT()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "GreaterThan" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitNotEqual(P416Parser::NotEqualContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->NE()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "NotEqual" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitEqual(P416Parser::EqualContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->EQ()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Equal" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitAnd(P416Parser::AndContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LAND()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "And" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitOr(P416Parser::OrContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->LOR()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			//cout << "Or" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitTernary(P416Parser::TernaryContext *ctx) override{
+			string rString;
+			rString += visit(ctx->expression(0)).as<string>();
+			rString += ctx->QUESTION()->toString();
+			rString += visit(ctx->expression(1)).as<string>();
+			rString += ctx->COLON()->toString();
+			rString += visit(ctx->expression(2)).as<string>();
+			//cout << "Ternary" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitPrefixedNonTypeName(P416Parser::PrefixedNonTypeNameContext *ctx) override{
+			string rString;
+			rString += (ctx->dotPrefix()!=nullptr)? visit(ctx->dotPrefix()).as<string>() : "";
+			rString += visit(ctx->nonTypeName()).as<string>();
+			//cout << "PrefixedNonTypeName" << ":" << rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitMember(P416Parser::MemberContext *ctx) override{
+			string rString;
+			rString += visit(ctx->name()).as<string>();
+			//cout << "Member" << ":" << rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryExpression_not(P416Parser::UnaryExpression_notContext *ctx) override{
+			string rString;
+			rString += ctx->NOT()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			//cout << "UnaryExpression_not" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryExpression_tilda(P416Parser::UnaryExpression_tildaContext *ctx) override{
+			string rString;
+			rString += ctx->TILDA()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			//cout << "UnaryExpression_tilda" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryExpression_plus(P416Parser::UnaryExpression_plusContext *ctx) override{
+			string rString;
+			rString += ctx->PLUS()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			//cout << "UnaryExpression_plus" << ":" <<rString <<endl;
+			return rString;
+		}
+
+		antlrcpp::Any visitUnaryExpression_minus(P416Parser::UnaryExpression_minusContext *ctx) override{
+			string rString;
+			rString += ctx->MINUS()->toString();
+			rString += visit(ctx->expression()).as<string>();
+			//cout << "UnaryExpression_minus" << ":" <<rString <<endl;
+			return rString;
+		}*/
 };
 
 
@@ -941,6 +1387,15 @@ int main(int argc,char* argv[])
 	builder.CreateRet(tmp);
 
 	module->dump();
+	std::map <string,vector<struct SimpleVariable>>::iterator struct_map_iter;
+	for(struct_map_iter=structMap.begin();struct_map_iter!=structMap.end();struct_map_iter++){
+		cout << struct_map_iter->first << " : " << endl;
+		vector<struct SimpleVariable> temp = struct_map_iter->second;
+		for(int i=0;i<temp.size();i++){
+			cout <<"\t" << temp[i].name << endl;
+		}
+		cout << endl;
+	}
 	return 0;
 }
 
