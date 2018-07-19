@@ -126,12 +126,12 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			{
 				matchKindCodeMap.insert(pair<string,int>(ilist[i],matchKindCount++));
 			}
-			cout << "-------matchkindmap-------------\n";	
+			//cout << "-------matchkindmap-------------\n";	
 			for (auto &it : matchKindCodeMap)
 			{
-				cout << it.first << " " << it.second <<endl;
+				// cout << it.first << " " << it.second <<endl;
 			}
-			cout << "--------------------\n";	
+			// cout << "--------------------\n";	
 			return nullptr;
 		}
 
@@ -703,14 +703,14 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			}
 			enumCodeMap.insert(pair<string, map<string,int>>(enumName,tempMap));
 
-			cout << "---enumcodemap--------------------\n";
-			for (auto &it : enumCodeMap)
-			{
-				cout << it.first <<endl; 
-				for (auto &it2: it.second)
-					cout << it2.first << " " << it2.second <<endl;
-			}
-			cout << "--------------------\n";
+			//cout << "---enumcodemap--------------------\n";
+			// for (auto &it : enumCodeMap)
+			// {
+			// 	// cout << it.first <<endl; 
+			// 	//for (auto &it2: it.second)
+			// 		// cout << it2.first << " " << it2.second <<endl;
+			// }
+			// cout << "--------------------\n";
 			rString += ctx->RCURL()->toString();
 			return rString;
 		}
@@ -891,7 +891,9 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				}			
 				llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(),type_list,false);
 				llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, actionName, module);
-				llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);							
+				llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);	
+				IRBuilder<> BBbuilder(entry);
+				BBbuilder.CreateRetVoid();						
 				return nullptr;
 			}
 			else
@@ -924,6 +926,8 @@ class MyDeclarationVisitor:public P416BaseVisitor
 				llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(),type_list, false);
 				llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, actionName, module);		
 				llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
+				IRBuilder<> BBbuilder(entry);
+				BBbuilder.CreateRetVoid();
 				return nullptr;
 			}
 		}
@@ -1388,14 +1392,6 @@ int main(int argc,char* argv[])
 
 	module->dump();
 	std::map <string,vector<struct SimpleVariable>>::iterator struct_map_iter;
-	for(struct_map_iter=structMap.begin();struct_map_iter!=structMap.end();struct_map_iter++){
-		cout << struct_map_iter->first << " : " << endl;
-		vector<struct SimpleVariable> temp = struct_map_iter->second;
-		for(int i=0;i<temp.size();i++){
-			cout <<"\t" << temp[i].name << endl;
-		}
-		cout << endl;
-	}
 	return 0;
 }
 
