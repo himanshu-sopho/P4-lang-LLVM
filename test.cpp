@@ -31,10 +31,12 @@ map <string,struct SimpleVariable> typedefMap;
 map <string, struct SimpleVariable> :: iterator itr;
 map <string, int> errorCodeMap;
 map <string, int> matchKindCodeMap;
+map <string, llvm::PointerType*> controlPointerMap;
 map <string, map <string, int> >enumCodeMap;
 int errorCount=0;
 int enumCount=0;
 int matchKindCount=0;
+
 
 static LLVMContext context;
 llvm::Module* module = new llvm::Module("top", context);
@@ -46,7 +48,7 @@ struct SimpleVariable
 	bool isSigned=0;
 	bool isBool = 0;
 	bool isError = 0;
-	unsigned int Width=0;
+	int Width=0;
 	long long int Value=0;
 };
 
@@ -103,23 +105,21 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			vector<string> ilist = visit(ctx->identifierList());
 			rString += ctx->RCURL()->toString();
 
-			cout <<endl;
 			for (int i=0;i<ilist.size();i++)
 			{
 				errorCodeMap.insert(pair<string,int>(ilist[i],errorCount++));
 			}
-			for (auto &it : errorCodeMap)
-			{
-				cout << it.first << " " << it.second <<endl;
-			}
-			cout << "--------------------\n";
+			// for (auto &it : errorCodeMap)
+			// {
+			// 	cout << it.first << " " << it.second <<endl;
+			// }
+			// cout << "--------------------\n";
 			return rString;
 		}
 
 		antlrcpp::Any visitMatchKindDeclaration(P416Parser::MatchKindDeclarationContext *ctx) override 
 		{
 			vector<string> ilist = visit(ctx->identifierList());
-			cout <<endl;
 			for (int i=0;i<ilist.size();i++)
 			{
 				matchKindCodeMap.insert(pair<string,int>(ilist[i],matchKindCount++));
@@ -198,7 +198,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 
 		antlrcpp::Any visitTypeRef(P416Parser::TypeRefContext *ctx) override
 		{
-			string rString = ctx->getText();
+			string typeRefString = ctx->getText();
 //			string rString="";
 //			if (ctx->baseType() != nullptr)
 //				rString += visit(ctx->baseType()).as<string>();
@@ -212,10 +212,21 @@ class MyDeclarationVisitor:public P416BaseVisitor
 //				rString += visit(ctx->tupleType()).as<string>();
 			if (ctx->baseType() != nullptr)
 			{
-				struct SimpleVariable temp=  (visit(ctx->baseType()).as<struct SimpleVariable>());
+				struct SimpleVariable temp=  visit(ctx->baseType()).as<struct SimpleVariable>();
 				return temp;
 			}
-			return rString;
+			else if (typedefMap.find(typeRefString) != typedefMap.end())
+			{
+				struct SimpleVariable temp = typedefMap.find(typeRefString)->second;
+				return temp;
+			}
+			else	
+			{
+				struct SimpleVariable ps ;
+				ps.Width = -1;
+				return ps;
+			}
+			//return rString;
 		}
 
 		antlrcpp::Any visitBoolType(P416Parser::BoolTypeContext *ctx) override
@@ -230,6 +241,7 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		{
 			struct SimpleVariable a;
 			a.isError = true;
+			a.Width =-1;
 			return a;
 		}
 
@@ -588,7 +600,6 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			vector<string> ilist = visit(ctx->identifierList());
 			rString += ctx->RCURL()->toString();
 
-			cout <<endl;
 			map<string,int> tempMap;
 			for (int i=0;i<ilist.size();i++)
 			{
@@ -664,20 +675,15 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			/*ignoring the case of direction for now*/
 			// in case where typeref is not a basetype but a typedef type declared to be base type
 			string typeRefString  = ctx->typeRef()->getText();
-
-			if (typedefMap.find(typeRefString) != typedefMap.end() )
-			{
-				struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
-				cout << "\ntemp width : \n"<<actualType.Width<<endl ;
-				return actualType;
-			}
-			else
-			{
-				auto temp = visit(ctx->typeRef()).as<struct SimpleVariable>();
-				cout << "\ntemp width : \n"<<temp.Width<<endl ;
-				return temp;
-			}
-			return ctx->getText();
+			// if (typedefMap.find(typeRefString) != typedefMap.end() )
+			// {
+			// 	struct SimpleVariable actualType = typedefMap.find(typeRefString)->second;
+			// 	cout << "\ntemp width : \n"<<actualType.Width<<endl ;
+			// 	return actualType;
+			// }
+			auto temp2 = visit(ctx->typeRef());
+			struct SimpleVariable temp1 = temp2.as<struct SimpleVariable>();
+			return temp1;
 		}	
 		antlrcpp::Any visitParameterList(P416Parser::ParameterListContext *ctx) override
 		{
@@ -685,8 +691,10 @@ class MyDeclarationVisitor:public P416BaseVisitor
 			
 			for(int i=0,len=ctx->parameter().size();i<len;i++)
 			{
-				auto temp = visit(ctx->parameter(i)).as<struct SimpleVariable>();
-				paralist.push_back(temp);
+				auto temp1 = visit(ctx->parameter(i)).as<struct SimpleVariable>();
+				if (temp1.Width == -1)
+					continue;
+				paralist.push_back(temp1);
 			}
 			return paralist;	
 		}
@@ -694,35 +702,137 @@ class MyDeclarationVisitor:public P416BaseVisitor
 		antlrcpp::Any visitControlTypeDeclaration(P416Parser::ControlTypeDeclarationContext *ctx) override
 		{
 			//string controlname = visit(ctx->name()).as<string>();
-			vector<struct SimpleVariable> paralist = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
-			return paralist;
+			if (ctx->parameterList() != nullptr)
+			{
+				vector<struct SimpleVariable> paralist = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+				string name = visit(ctx->name()).as<string>();
+				string control_name = "control."+name;
+				vector<llvm::Type*> type_list;
+				for (int i=0,len=paralist.size();i<len;i++)
+				{
+					type_list.push_back(llvm::Type::getIntNTy(context,paralist[i].Width));
+				}
+				llvm::StructType *structType = llvm::StructType::create(context, control_name);
+				llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); 
+
+				controlPointerMap.insert(pair<string,llvm::PointerType*>(name,pstructType));
+				structType->setBody(type_list);
+				module->getOrInsertGlobal(control_name, structType);
+				return paralist;
+			}
+			vector<struct SimpleVariable> para;
+			return para;
 		}
 
 		antlrcpp::Any visitControlDeclaration(P416Parser::ControlDeclarationContext *ctx) override
 		{
 			string rString = "";
 			vector<struct SimpleVariable> paralist = visit(ctx->controlTypeDeclaration()).as<vector<struct SimpleVariable>>();
-			for (int i=0,len=paralist.size();i<len;i++)
-				cout << "\nwidth : \n" << paralist[i].Width ;
-			visit(ctx->controlLocalDeclarations());	
+			// for (int i=0,len=paralist.size();i<len;i++)
+			// 	cout << "\nwidth1 : \n" << paralist[i].Width <<endl;
+			if (ctx->controlLocalDeclarations()!=nullptr)
+				visit(ctx->controlLocalDeclarations());	
+
 			return nullptr;
 		}				  
 
-		antlrcpp::Any visitActionDeclaration(P416Parser::ActionDeclarationContext *ctx) override
+		antlrcpp::Any visitControlLocalDeclarations(P416Parser::ControlLocalDeclarationsContext *ctx) override
 		{
-			vector<struct SimpleVariable> paralist  = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
-			for (int i=0,len=paralist.size();i<len;i++)
-				cout << "\nwidth : \n" << paralist[i].Width ;
+			for(int i=0,len=ctx->controlLocalDeclaration().size();i<len;i++)
+				visit(ctx->controlLocalDeclaration(i));	
+			return nullptr;	
+		}
+
+		antlrcpp::Any visitControlLocalDeclaration(P416Parser::ControlLocalDeclarationContext *ctx) override
+		{
+			if (ctx->constantDeclaration()!=nullptr)
+				visit(ctx->constantDeclaration());
+			else if (ctx->actionDeclaration()!=nullptr)
+				visit(ctx->actionDeclaration());
+			// else if (ctx->tableDeclaration()!=nullptr)
+			// 	visit(ctx->tableDeclaration());
+			// else if (ctx->instantiation()!=nullptr)
+			// 	visit(ctx->instantiation());
+			// else if (ctx->variableDeclaration()!=nullptr)
+			// 	visit(ctx->variableDeclaration());		
+			return nullptr;	
+		}
+
+		antlrcpp::Any visitActionDeclaration(P416Parser::ActionDeclarationContext *ctx) override
+		{	
+
+			string actionName = ctx->name()->getText();
+			if(ctx->parameterList() != nullptr)
+			{
+				vector<struct SimpleVariable> paralist  = visit(ctx->parameterList()).as<vector<struct SimpleVariable>>();
+				vector<llvm::Type*> type_list;
+				for (int i=0,len=paralist.size();i<len;i++)
+				{
+					//cout << "\nwidth2 : \n" << paralist[i].Width ;
+					type_list.push_back(llvm::Type::getIntNTy(context,paralist[i].Width));
+				}
+
+				int flag = 0;
+				string control_name="";
+				if (ctx->parent !=NULL)
+					if (ctx->parent->parent !=NULL)
+						if (ctx->parent->parent->parent !=NULL)
+						{
+							flag = 1;
+							//cout << endl<<"parent : "<<ctx->parent->parent->parent->children[0]->getText()<<endl;
+							string name =  ctx->parent->parent->parent->children[0]->getText();
+							int i = 7;
 							
-			llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
-			
-			llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "action", module);
-			
-			llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
-			
-			//builder.SetInsertPoint(entry);
-			cout << "\nhello\n";
-			return ctx->getText();
+							while(name[i]!='(')
+							{
+								control_name += name[i];
+								i++;
+							}
+							//cout << endl << "control : " <<control_name <<endl;
+						}
+				if (flag==1)
+				{
+					llvm::PointerType *temp  =controlPointerMap.find(control_name)->second;
+					type_list.push_back(temp);
+					flag=0;
+				}			
+				llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(),type_list,false);
+				llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, actionName, module);
+			//	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);							
+				return nullptr;
+			}
+			else
+			{
+				int flag = 0;
+				string control_name="";
+				vector<llvm::Type*> type_list;
+				if (ctx->parent !=NULL)
+					if (ctx->parent->parent !=NULL)
+						if (ctx->parent->parent->parent !=NULL)
+						{
+							flag = 1;
+							//cout << endl<<"parent : "<<ctx->parent->parent->parent->children[0]->getText()<<endl;
+							string name =  ctx->parent->parent->parent->children[0]->getText();
+							int i = 7;
+							
+							while(name[i]!='(')
+							{
+								control_name += name[i];
+								i++;
+							}
+							//cout << endl << "control : " <<control_name <<endl;
+						}
+				if (flag==1)
+				{
+					llvm::PointerType *temp  =controlPointerMap.find(control_name)->second;
+					type_list.push_back(temp);
+					flag=0;
+				}					
+				llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(),type_list, false);
+				llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, actionName, module);		
+			//	llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "label2", mainFunc);
+				return nullptr;
+			}
 		}	  
 };
 
@@ -731,16 +841,6 @@ int main(int argc,char* argv[])
 {
 	std::ifstream stream;
 	stream.open(argv[1]);
-
-	llvm::StructType *structType = llvm::StructType::create(context, "struct.node");
-	llvm::PointerType *pstructType = llvm::PointerType::get(structType, 0); // pointer to RaviGCObject
-	std::vector<llvm::Type *> elements;
-	elements.push_back(pstructType);
-	elements.push_back(llvm::Type::getInt8Ty(context));
-	elements.push_back(llvm::Type::getInt8Ty(context));
-	structType->setBody(elements);
-	errs() << "hi\n\n\n\n\n" <<*structType ;
-	module->getOrInsertGlobal("hey", structType);
 
 	llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getInt32Ty(), false);
 	llvm::Function *mainFunc =

@@ -15,6 +15,7 @@
         "memory": "cpp",
         "utility": "cpp",
         "__split_buffer": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "iterator": "cpp"
     }
 }
