@@ -6,6 +6,8 @@
 2. mkdir build;cd build
 3. cmake ../
 4. This creates an executable in build folder named "codegen".
+5. Run codegen as : codegen /pathToInputFile/Inputfile.p4 &> /pathToOutputFile/Outputfile.ll
+6. This will generate Outputfile.ll which can be compiled using lli(Interpreter) or llc(Compile to assembly file).
 
 
 # P4-lang-LLVM(without CMake)
